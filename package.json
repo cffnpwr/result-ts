@@ -1,5 +1,5 @@
 {
-  "name": "result-ts",
+  "name": "@cffnpwr/result-ts",
   "version": "0.0.0",
   "description": "Result type like Rust-Lang for TypeScript",
   "type": "module",
