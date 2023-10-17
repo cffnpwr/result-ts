@@ -1,0 +1,20 @@
+{
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true
+  },
+  "typescript.format.semicolons": "insert",
+  "javascript.format.semicolons": "insert",
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true
+  },
+  "eslint.codeActionsOnSave.mode": "all",
+  "eslint.experimental.useFlatConfig": false,
+  "git.enableCommitSigning": true
+}

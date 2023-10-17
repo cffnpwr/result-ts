@@ -1,0 +1,24 @@
+{
+  "name": "Existing Docker Compose (Extend)",
+  "dockerComposeFile": ["./compose.yaml"],
+  "service": "dev",
+  "workspaceFolder": "/result-ts",
+  "remoteUser": "node",
+  "postCreateCommand": "sudo git config --system --add safe.directory /caffe && sudo git config --global gpg.program /usr/bin/gpg2",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "editorconfig.editorconfig",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "christian-kohler.path-intellisense",
+        "steoates.autoimport",
+        "VisualStudioExptTeam.vscodeintellicode",
+        "VisualStudioExptTeam.vscodeintellicode-completions",
+        "oderwat.indent-rainbow",
+        "ms-azuretools.vscode-docker",
+        "ZixuanChen.vitest-explorer"
+      ]
+    }
+  }
+}

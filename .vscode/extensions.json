@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "editorconfig.editorconfig",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "christian-kohler.path-intellisense",
+    "steoates.autoimport",
+    "VisualStudioExptTeam.vscodeintellicode",
+    "VisualStudioExptTeam.vscodeintellicode-completions",
+    "oderwat.indent-rainbow",
+    "ms-azuretools.vscode-docker",
+    "ZixuanChen.vitest-explorer"
+  ]
+}
