@@ -13,7 +13,8 @@ diff:
   datastores:
     - artifact://${GITHUB_REPOSITORY}
 comment:
-  if: is_pull_request
+  if: github.evemt_name == 'pull_request_target' || github.event_name == 'pull_request'
+  deletePrevious: true
 report:
   if: is_default_branch
   datastores:
