@@ -1,0 +1,47 @@
+{
+  "name": "@cffnpwr/result-ts",
+  "version": "1.0.0",
+  "description": "Rust like Result type for TypeScript",
+  "license": "MIT",
+  "exports": "./index.ts",
+  "tasks": {
+    "build-package": "deno run --allow-env --allow-read --allow-write --allow-net --allow-run ./scripts/build-package.ts",
+    "runtime-test": "deno run --allow-read --allow-write --allow-net --allow-run ./scripts/runtime-test.ts"
+  },
+  "exclude": [
+    "./runtime-test/"
+  ],
+  "fmt": {
+    "indentWidth": 2,
+    "useTabs": false,
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-namespace"
+      ]
+    }
+  },
+  "imports": {
+    "@deno/dnt": "jsr:@deno/dnt@^0.41.3",
+    "@std/cli": "jsr:@std/cli@^1.0.13",
+    "@std/expect": "jsr:@std/expect@^1.0.13",
+    "@std/fs": "jsr:@std/fs@^1.0.13",
+    "@std/jsonc": "jsr:@std/jsonc@^1.0.1",
+    "@std/path": "jsr:@std/path@^1.0.8",
+    "@std/testing": "jsr:@std/testing@^1.0.9",
+    "@ts-morph/ts-morph": "jsr:@ts-morph/ts-morph@^25.0.1",
+    "zod": "npm:zod@^3.24.2"
+  },
+  "publish": {
+    "include": [
+      "index.ts",
+      "src/**/*.ts",
+      "README.md",
+      "LICENSE",
+      "deno.jsonc"
+    ]
+  }
+}

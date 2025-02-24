@@ -1,399 +1,176 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, it } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { None, type Option, Some } from "./option.ts";
+import { UnwrapError } from "./error.ts";
+import { Err, Ok } from "./result.ts";
 
-import { None, Option, Some } from "./option";
+describe("option.ts", () => {
+  const exSome: Option<number> = Some(1);
+  const exNone: Option<number> = None();
 
-describe("isSome", () => {
-  it("Returns `true` if the option is a `Some` value.", () => {
-    const x: Option<number> = new Some(2);
+  describe("等価性", () => {
+    it("[正常系] 同一の値を持つSomeは等価である", () => {
+      const some1 = Some(1);
+      const some2 = Some(1);
 
-    expect(x.isSome()).toBe(true);
+      expect(some1).toEqual(some2);
+    });
+
+    it("[正常系] 異なる値を持つSomeは等価でない", () => {
+      const some1 = Some(1);
+      const some2 = Some(2);
+
+      expect(some1).not.toEqual(some2);
+    });
+
+    it("[正常系] SomeとNoneは等価でない", () => {
+      const some = Some(1);
+      const none = None();
+
+      expect(some).not.toEqual(none);
+    });
+
+    it("[正常系] 同一の値を持つNoneは等価である", () => {
+      const none1 = None();
+      const none2 = None();
+
+      expect(none1).toEqual(none2);
+    });
   });
 
-  it("Returns `false` if the option is a `None` value.", () => {
-    const x: Option<number> = new None();
+  describe("isSome()", () => {
+    it("[正常系] SomeでisSome()を実行するとtrueが返る", () => {
+      expect(exSome.isSome()).toBe(true);
+    });
 
-    expect(x.isSome()).toBe(false);
-  });
-});
-
-describe("isSomeAnd", () => {
-  it("Returns `true` if the option is a `Some` and the value inside of it matches a predicate.", () => {
-    const x: Option<number> = new Some(2);
-
-    expect(x.isSomeAnd((x) => x > 1)).toBe(true);
+    it("[正常系] NoneでisSome()を実行するとfalseが返る", () => {
+      expect(exNone.isSome()).toBe(false);
+    });
   });
 
-  it("Returns `false` if the option is a `Some` and the value inside of it does not matche a predicate.", () => {
-    const x: Option<number> = new Some(0);
+  describe("isNone()", () => {
+    it("[正常系] SomeでisNone()を実行するとfalseが返る", () => {
+      expect(exSome.isNone()).toBe(false);
+    });
 
-    expect(x.isSomeAnd((x) => x > 1)).toBe(false);
+    it("[正常系] NoneでisNone()を実行するとtrueが返る", () => {
+      expect(exNone.isNone()).toBe(true);
+    });
   });
 
-  it("Returns `false` if the option is a `None`.", () => {
-    const x: Option<number> = new None();
+  describe("unwrap()", () => {
+    it("[正常系] Someでunwrap()を実行すると値が返る", () => {
+      expect(exSome.unwrap()).toBe(1);
+    });
 
-    expect(x.isSomeAnd((x) => x > 1)).toBe(false);
-  });
-});
-
-describe("isNone", () => {
-  it("Returns `false` if the option is a `Some` value.", () => {
-    const x: Option<number> = new Some(2);
-
-    expect(x.isNone()).toBe(false);
+    it("[異常系] Noneでunwrap()を実行するとUnwrapErrorを吐く", () => {
+      expect(() => exNone.unwrap()).toThrow(UnwrapError);
+    });
   });
 
-  it("Returns `true` if the option is a `None` value.", () => {
-    const x: Option<number> = new None();
+  describe("unwrapOr()", () => {
+    it("[正常系] SomeでunwrapOr()を実行すると自身の値を返す", () => {
+      expect(exSome.unwrapOr(2)).toBe(1);
+    });
 
-    expect(x.isNone()).toBe(true);
-  });
-});
-
-describe("expect", () => {
-  it("Returns the contained `Some` value, consuming the self value.", () => {
-    const x: Option<number> = new Some(2);
-
-    expect(x.expect("error")).toBe(2);
+    it("[正常系] NoneでunwrapOr()を実行すると引数の値を返す", () => {
+      expect(exNone.unwrapOr(2)).toBe(2);
+    });
   });
 
-  it("throw `msg`, if contained `None`.", () => {
-    const x: Option<number> = new None();
+  describe("unwrapOrElse()", () => {
+    it("[正常系] SomeでunwrapOrElse()を実行すると自身の値を返す", () => {
+      expect(exSome.unwrapOrElse(() => 2)).toBe(1);
+    });
 
-    expect(() => x.expect("error")).toThrowError("error");
-  });
-});
-
-describe("unwrap", () => {
-  it("Returns the contained `Some` value, consuming the self value.", () => {
-    const x: Option<number> = new Some(2);
-
-    expect(x.unwrap()).toBe(2);
+    it("[正常系] NoneでunwrapOrElse()を実行すると関数の戻り値を返す", () => {
+      expect(exNone.unwrapOrElse(() => 2)).toBe(2);
+    });
   });
 
-  it("Throw an Error, if contained `None` value.", () => {
-    const x: Option<number> = new None();
+  describe("expect()", () => {
+    it("[正常系] Someでexpect()を実行すると値が返る", () => {
+      expect(exSome.expect("error")).toBe(1);
+    });
 
-    expect(() => x.unwrap()).toThrowError();
-  });
-});
-
-describe("unwrapOr", () => {
-  it("Returns the contained `Some` value.", () => {
-    const x: Option<number> = new Some(2);
-
-    expect(x.unwrapOr(0)).toBe(2);
+    it("[異常系] Noneでexpect()を実行するとUnwrapErrorを吐く", () => {
+      expect(() => exNone.expect("error")).toThrow(new UnwrapError("error"));
+    });
   });
 
-  it("Returns a provided default.", () => {
-    const x: Option<number> = new None();
+  describe("map()", () => {
+    it("[正常系] Someでmap()を実行すると引数の関数を実行した結果のSomeが返る", () => {
+      const expected: Option<string> = Some("1");
 
-    expect(x.unwrapOr(0)).toBe(0);
-  });
-});
+      expect(exSome.map((val) => val.toString())).toEqual(expected);
+    });
 
-describe("unwrapOrElse", () => {
-  const k = 10;
+    it("[正常系] Noneでmap()を実行すると自身の値を返す", () => {
+      const expected: Option<string> = None();
 
-  it("Returns the contained `Some` value.", () => {
-    const x: Option<number> = new Some(2);
-
-    expect(x.unwrapOrElse(() => 2 * k)).toBe(2);
+      expect(exNone.map((val) => val.toString())).toEqual(expected);
+    });
   });
 
-  it("Returns computes it from a closure.", () => {
-    const x: Option<number> = new None();
+  describe("okOr()", () => {
+    it("[正常系] SomeでokOr()を実行すると自身の値をOkで包んで返す", () => {
+      expect(exSome.okOr(2)).toEqual(Ok(1));
+    });
 
-    expect(x.unwrapOrElse(() => 2 * k)).toBe(20);
-  });
-});
-
-describe("map", () => {
-  const getLength = (str: string) => str.length;
-
-  it("Maps an `Option<T>` to `Option<U>` by applying a function to a contained value (if `Some`).", () => {
-    const x: Option<string> = new Some("hello");
-
-    expect(x.map(getLength).unwrap()).toBe(5);
+    it("[正常系] NoneでokOr()を実行すると引数の値をErrで包んで返す", () => {
+      expect(exNone.okOr(2)).toEqual(Err(2));
+    });
   });
 
-  it("Returns `None` (if `None`).", () => {
-    const x: Option<string> = new None();
+  describe("and()", () => {
+    it("[正常系] Someでand()を実行すると引数の値を返す", () => {
+      const expected: Option<string> = Some("1");
 
-    expect(x.map(getLength).isNone()).toBe(true);
-  });
-});
+      expect(exSome.and(Some("1"))).toEqual(expected);
+    });
 
-describe("mapOr", () => {
-  const getLength = (str: string) => str.length;
-
-  it("Applies a function to the contained value (if any).", () => {
-    const x: Option<string> = new Some("hello");
-
-    expect(x.mapOr(13 as number, getLength)).toBe(5);
+    it("[正常系] Noneでand()を実行するとNoneを返す", () => {
+      expect(exNone.and(Some(1))).toEqual(None());
+    });
   });
 
-  it("Returns the provided default result (if none).", () => {
-    const x: Option<string> = new None();
+  describe("andThen()", () => {
+    it("[正常系] SomeでandThen()を実行すると引数の関数を実行した結果を返す", () => {
+      const expected: Option<string> = Some("1");
 
-    expect(x.mapOr(13 as number, getLength)).toBe(13);
-  });
-});
+      expect(exSome.andThen((val) => Some(val.toString()))).toEqual(expected);
+    });
 
-describe("mapOrElse", () => {
-  const k = 21;
-
-  it("Computes a default function result (if none).", () => {
-    const x: Option<string> = new None();
-
-    expect(
-      x.mapOrElse(
-        () => 2 * k,
-        (v: string) => v.length,
-      ),
-    ).toBe(42);
+    it("[正常系] NoneでandThen()を実行するとNoneを返す", () => {
+      expect(exNone.andThen((val) => Some(val.toString()))).toEqual(None());
+    });
   });
 
-  it("Applies a different function to the contained value (if any).", () => {
-    const x: Option<string> = new Some("hoge");
+  describe("or()", () => {
+    it("[正常系] Someでor()を実行すると自身の値を返す", () => {
+      const expected: Option<number> = Some(1);
 
-    expect(
-      x.mapOrElse(
-        () => 2 * k,
-        (v) => v.length,
-      ),
-    ).toBe(4);
-  });
-});
+      expect(exSome.or(Some(2))).toEqual(expected);
+    });
 
-describe("inspect", () => {
-  const closure = vi.fn((input: string) => input);
+    it("[正常系] Noneでor()を実行すると引数の値を返す", () => {
+      const expected: Option<number> = Some(2);
 
-  beforeEach(() => {
-    closure.mockReset();
+      expect(exNone.or(Some(2))).toEqual(expected);
+    });
   });
 
-  it("Calls the provided closure with a reference to the contained value (if `Some`).", () => {
-    const x: Option<string> = new Some("foo");
+  describe("orElse()", () => {
+    it("[正常系] SomeでorElse()を実行すると自身の値を返す", () => {
+      const expected: Option<number> = Some(1);
 
-    expect(x.inspect(closure)).toBe(x);
-    expect(closure).toHaveBeenCalledOnce();
-  });
+      expect(exSome.orElse(() => Some(2))).toEqual(expected);
+    });
 
-  it("Do nothing (if `None`).", () => {
-    const x: Option<string> = new None();
+    it("[正常系] NoneでorElse()を実行すると関数の戻り値を返す", () => {
+      const expected: Option<number> = Some(2);
 
-    expect(x.inspect(closure)).toBe(x);
-    expect(closure).not.toHaveBeenCalled();
-  });
-});
-
-describe("okOr", () => {
-  it("Transforms the `Option<T>` into a `Result<T, E>`, mapping `Some(v)` to `Ok(v)`.", () => {
-    const x: Option<string> = new Some("foo");
-
-    expect(x.okOr("error").isOk()).toBe(true);
-    expect(x.okOr("error").unwrap()).toBe("foo");
-  });
-
-  it("Transforms the `Option<T>` into a `Result<T, E>`, mapping `None` to `Err(error)`.", () => {
-    const x: Option<string> = new None();
-
-    expect(x.okOr("error").isErr()).toBe(true);
-    expect(x.okOr("error").unwrapErr()).toBe("error");
-  });
-});
-
-describe("okOrElse", () => {
-  const getError = () => "error";
-
-  it("Transforms the `Option<T>` into a `Result<T, E>`, mapping `Some(v)` to `Ok(v)`.", () => {
-    const x: Option<string> = new Some("foo");
-
-    expect(x.okOrElse(getError).isOk()).toBe(true);
-    expect(x.okOrElse(getError).unwrap()).toBe("foo");
-  });
-
-  it("Transforms the `Option<T>` into a `Result<T, E>`, mapping `None` to `Err(error())`.", () => {
-    const x: Option<string> = new None();
-
-    expect(x.okOrElse(getError).isErr()).toBe(true);
-  });
-});
-
-describe("and", () => {
-  it("Returns `optb`. (`Some` and `Some`)", () => {
-    const x: Option<string> = new Some("foo");
-    const y: Option<string> = new Some("bar");
-
-    expect(x.and(y).isSome()).toBe(true);
-    expect(x.and(y).unwrap()).toBe("bar");
-  });
-
-  it("Returns `None` if the option is `None`. (`None` and `Some`)", () => {
-    const x: Option<string> = new None();
-    const y: Option<string> = new Some("bar");
-
-    expect(x.and(y).isNone()).toBe(true);
-  });
-
-  it("Returns `optb`. (`Some` and `None`)", () => {
-    const x: Option<string> = new Some("foo");
-    const y: Option<string> = new None();
-
-    expect(x.and(y).isNone()).toBe(true);
-  });
-
-  it("Returns `None` if the option is `None`. (`None` and `None`)", () => {
-    const x: Option<string> = new None();
-    const y: Option<string> = new None();
-
-    expect(x.and(y).isNone()).toBe(true);
-  });
-});
-
-describe("andThen", () => {
-  const stringify = (x: number) => {
-    if (x < 0) {
-      return new None();
-    }
-
-    return new Some(`${x}`);
-  };
-
-  it("Returns `None` if the option is `None`.", () => {
-    const x: Option<number> = new None();
-
-    expect(x.andThen(stringify).isNone()).toBe(true);
-  });
-
-  it("Calls `op` with the wrapped value and returns the result. (`op` returns `Some`)", () => {
-    const x: Option<number> = new Some(3);
-
-    expect(x.andThen(stringify).isSome()).toBe(true);
-    expect(x.andThen(stringify).unwrap()).toBe("3");
-  });
-
-  it("Calls `op` with the wrapped value and returns the result. (`op` returns `None`)", () => {
-    const x: Option<number> = new Some(-3);
-
-    expect(x.andThen(stringify).isNone()).toBe(true);
-  });
-});
-
-describe("filter", () => {
-  const isPositiveNumber = (x: number) => x > 0;
-
-  it("Returns `None` if the option is `None`.", () => {
-    const x: Option<number> = new None();
-
-    expect(x.filter(isPositiveNumber).isNone()).toBe(true);
-  });
-
-  it("Calls `predicate` with the wrapped value and returns. (`predicate` returns `true`)", () => {
-    const x: Option<number> = new Some(3);
-
-    expect(x.filter(isPositiveNumber).isSome()).toBe(true);
-    expect(x.filter(isPositiveNumber).unwrap()).toBe(3);
-  });
-
-  it("Calls `predicate` with returns `None`. (`predicate` returns `false`)", () => {
-    const x: Option<number> = new Some(-3);
-
-    expect(x.filter(isPositiveNumber).isNone()).toBe(true);
-  });
-});
-
-describe("or", () => {
-  it("Returns the option if it contains a value. (`Some` and `Some`)", () => {
-    const x: Option<string> = new Some("foo");
-    const y: Option<string> = new Some("bar");
-
-    expect(x.or(y).isSome()).toBe(true);
-    expect(x.or(y).unwrap()).toBe("foo");
-  });
-
-  it("Returns `optb`. (`None` and `Some`)", () => {
-    const x: Option<string> = new None();
-    const y: Option<string> = new Some("bar");
-
-    expect(x.or(y).isSome()).toBe(true);
-    expect(x.or(y).unwrap()).toBe("bar");
-  });
-
-  it("Returns the option if it contains a value. (`Some` and `None`)", () => {
-    const x: Option<string> = new Some("foo");
-    const y: Option<string> = new None();
-
-    expect(x.or(y).isSome()).toBe(true);
-    expect(x.or(y).unwrap()).toBe("foo");
-  });
-
-  it("Returns `optb`. (`None` and `None`)", () => {
-    const x: Option<string> = new None();
-    const y: Option<string> = new None();
-
-    expect(x.or(y).isNone()).toBe(true);
-  });
-});
-
-describe("orElse", () => {
-  it("Returns the option if it contains a value. (`Some` and `Some`)", () => {
-    const x: Option<string> = new Some("foo");
-
-    expect(x.orElse(() => new Some("bar")).isSome()).toBe(true);
-    expect(x.orElse(() => new Some("bar")).unwrap()).toBe("foo");
-  });
-
-  it("Calls `op` and returns the result. (`None` and `Some`)", () => {
-    const x: Option<string> = new None();
-
-    expect(x.orElse(() => new Some("bar")).isSome()).toBe(true);
-    expect(x.orElse(() => new Some("bar")).unwrap()).toBe("bar");
-  });
-
-  it("Returns the option if it contains a value. (`Some` and `None`)", () => {
-    const x: Option<string> = new Some("foo");
-
-    expect(x.orElse(() => new None()).isSome()).toBe(true);
-    expect(x.orElse(() => new None()).unwrap()).toBe("foo");
-  });
-
-  it("Returns `optb`. (`None` and `None`)", () => {
-    const x: Option<string> = new None();
-
-    expect(x.orElse(() => new None()).isNone()).toBe(true);
-  });
-});
-
-describe("or", () => {
-  it("Returns `None`. (`Some` and `Some`)", () => {
-    const x: Option<string> = new Some("foo");
-    const y: Option<string> = new Some("bar");
-
-    expect(x.xor(y).isNone()).toBe(true);
-  });
-
-  it("Returns `Some` if exactly one of self. (`None` and `Some`)", () => {
-    const x: Option<string> = new None();
-    const y: Option<string> = new Some("bar");
-
-    expect(x.xor(y).isSome()).toBe(true);
-    expect(x.xor(y).unwrap()).toBe("bar");
-  });
-
-  it("Returns `Some` if exactly one of self. (`Some` and `None`)", () => {
-    const x: Option<string> = new Some("foo");
-    const y: Option<string> = new None();
-
-    expect(x.xor(y).isSome()).toBe(true);
-    expect(x.xor(y).unwrap()).toBe("foo");
-  });
-
-  it("Returns `None`. (`None` and `None`)", () => {
-    const x: Option<string> = new None();
-    const y: Option<string> = new None();
-
-    expect(x.xor(y).isNone()).toBe(true);
+      expect(exNone.orElse(() => Some(2))).toEqual(expected);
+    });
   });
 });

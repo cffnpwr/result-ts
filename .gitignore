@@ -131,3 +131,6 @@ dist
 
 # pnpm
 .pnpm-store/
+
+# dnt
+built-package/

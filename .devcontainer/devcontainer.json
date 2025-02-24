@@ -1,23 +1,25 @@
 {
-  "name": "Existing Docker Compose (Extend)",
-  "dockerComposeFile": ["./compose.yaml"],
-  "service": "dev",
-  "workspaceFolder": "/result-ts",
-  "remoteUser": "node",
-  "postCreateCommand": "sudo git config --system --add safe.directory /caffe && sudo git config --global gpg.program /usr/bin/gpg2",
+  "name": "Result-ts",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "features": {
+    "ghcr.io/devcontainers-community/features/deno:1": {},
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/michidk/devcontainers-features/bun:1": {}
+  },
+  "runArgs": [
+    "--userns=keep-id"
+  ],
+  "containerUser": "vscode",
   "customizations": {
     "vscode": {
       "extensions": [
-        "editorconfig.editorconfig",
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
+        "EditorConfig.EditorConfig",
         "christian-kohler.path-intellisense",
-        "steoates.autoimport",
-        "VisualStudioExptTeam.vscodeintellicode",
-        "VisualStudioExptTeam.vscodeintellicode-completions",
+        "denoland.vscode-deno",
         "oderwat.indent-rainbow",
-        "ms-azuretools.vscode-docker",
-        "ZixuanChen.vitest-explorer"
+        "github.vscode-github-actions"
       ]
     }
   }

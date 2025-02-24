@@ -1,226 +1,195 @@
-import { Err, Ok, Result } from "./result";
+import { UnwrapError } from "./error.ts";
+import { Result } from "./result.ts";
 
 interface OptionBase<T> {
   /**
-   * @returns Returns `true` if the option is a `Some` value.
+   * Returns true if the option is `Some`.
+   * @returns {boolean}
    */
   isSome(): boolean;
 
   /**
-   * @returns Returns `true` if the option is a `Some` and the value inside of it matches a predicate.
-   */
-  isSomeAnd(fn: (value: T) => boolean): boolean;
-
-  /**
-   * @returns Returns `true` if the option is a `None` value.
+   * Returns true if the option is `None`.
+   * @returns {boolean}
    */
   isNone(): boolean;
 
   /**
-   * @param msg throw `msg`, if contained `None`.
-   * @returns Returns the contained `Some` value, consuming the self value.
-   */
-  expect(msg: string): T;
-
-  /**
-   * @returns Returns the contained `Some` value, consuming the self value.
+   * Unwraps an option, yielding the content of a `Some`.
+   * @returns {T}
+   * @throws {UnimplementedError}
    */
   unwrap(): T;
 
   /**
-   * @returns Returns the contained `Some` value or a provided default.
+   * Unwraps an option, yielding the content of a `Some`.
+   * @param {T} val
+   * @returns {T}
    */
-  unwrapOr(defaultValue: T): T;
+  unwrapOr(val: T): T;
 
   /**
-   * @returns Returns the contained `Some` value or computes it from a closure.
+   * Unwraps an option, yielding the content of a `Some`.
+   * @param {() => T} fn
+   * @returns {T}
    */
-  unwrapOrElse(op: () => T): T;
+  unwrapOrElse(fn: () => T): T;
 
   /**
-   * @returns Maps an `Option<T>` to `Option<U>` by applying a function to a contained value (if `Some`) or returns `None` (if `None`).
+   * Unwraps an option, yielding the content of a `None`.
+   * @returns {never}
+   * @throws {UnimplementedError}
    */
-  map<U>(op: (value: T) => U): Option<U>;
+  expect(msg: string): T;
 
   /**
-   * @returns Returns the provided default result (if none), or applies a function to the contained value (if any).
+   * Maps an `Option<T>` to `Option<U>` by applying a function to an contained `Some` value, leaving a `None` value untouched.
+   * @param {(val: T) => U} fn
+   * @returns {Option<U>}
    */
-  mapOr<U>(defaultValue: U, mapper: (value: T) => U): U;
+  map<U>(fn: (val: T) => U): Option<U>;
 
   /**
-   * @returns Computes a default function result (if none), or applies a different function to the contained value (if any).
+   * Transforms the `Option<T>` into a `Result<T, E>`, mapping `Some(v)` to `Ok(v)` and `None` to `Err(err)`.
+   * @param {E} err
+   * @returns {Result<T, E>}
    */
-  mapOrElse<U>(defaultFn: () => U, mapper: (value: T) => U): U;
+  okOr<E>(err: E): Result<T, E>;
 
   /**
-   * Calls the provided closure with a reference to the contained value (if `Some`).
-   *
-   * @returns Returns itself.
+   * Returns `None` if the option is `None`, otherwise returns `optb`.
+   * @param {Option<U>} obtb
    */
-  inspect<F extends (value: T) => unknown>(fn: F): ThisType<T>;
+  and<U>(obtb: Option<U>): Option<U>;
 
   /**
-   * @returns Transforms the `Option<T>` into a `Result<T, E>`, mapping `Some(v)` to `Ok(v)` and `None` to `Err(error)`.
+   * Calls `fn` if the option is `Some`, otherwise returns `None`.
+   * @param {(val: T) => Option<U>} fn
    */
-  okOr<E>(error: E): Result<T, E>;
+  andThen<U>(fn: (val: T) => Option<U>): Option<U>;
 
   /**
-   * @returns Transforms the `Option<T>` into a `Result<T, E>`, mapping `Some(v)` to `Ok(v)` and `None` to `Err(error())`.
-   */
-  okOrElse<E>(error: () => E): Result<T, E>;
-
-  /**
-   * @returns Returns `None` if the option is `None`, otherwise returns `optb`.
-   */
-  and<U>(optb: Option<U>): Option<U>;
-
-  /**
-   * @returns Returns `None` if the option is `None`, otherwise calls `op` with the wrapped value and returns the result.
-   */
-  andThen<U>(op: (value: T) => Option<U>): Option<U>;
-
-  /**
-   * @returns Returns `None` if the option is `None`, otherwise calls `predicate` with the wrapped value and returns:
-   */
-  filter(predicate: (value: T) => boolean): Option<T>;
-
-  /**
-   * @returns Returns the option if it contains a value, otherwise returns `optb`.
+   * Returns the option if it contains a value, otherwise returns `optb`.
+   * @param {Option<T>} optb
    */
   or(optb: Option<T>): Option<T>;
 
   /**
-   * @returns Returns the option if it contains a value, otherwise calls `op` and returns the result.
+   * Calls `fn` if the option is `None`, otherwise returns the option.
+   * @param {() => Option<T>} fn
    */
-  orElse(op: () => Option<T>): Option<T>;
-
-  /**
-   * @returns Returns `Some` if exactly one of self, `optb` is `Some`, otherwise returns `None`.
-   */
-  xor(optb: Option<T>): Option<T>;
+  orElse(fn: () => Option<T>): Option<T>;
 }
 
-export class Some<T> implements OptionBase<T> {
-  constructor(private readonly value: T) {}
+export namespace Option {
+  export type Some<T> = _Some<T>;
+  export type None<T> = _None<T>;
 
-  isSome(): true {
-    return true;
-  }
-  isSomeAnd(fn: (value: T) => boolean): boolean {
-    return fn(this.value);
-  }
-  isNone(): false {
-    return false;
-  }
-  expect(_: string): T {
-    return this.value;
-  }
-  unwrap(): T {
-    return this.value;
-  }
-  unwrapOr(_: T): T {
-    return this.value;
-  }
-  unwrapOrElse(_: () => T): T {
-    return this.value;
-  }
-  map<U>(op: (value: T) => U): Option<U> {
-    return new Some(op(this.value));
-  }
-  mapOr<U>(_: U, mapper: (value: T) => U): U {
-    return mapper(this.value);
-  }
-  mapOrElse<U>(_: () => U, mapper: (value: T) => U): U {
-    return mapper(this.value);
-  }
-  inspect(fn: (value: T) => unknown): ThisType<T> {
-    fn(this.value);
+  export class _Some<T> implements OptionBase<T> {
+    constructor(readonly value: T) {}
 
-    return this;
+    isSome(): this is Some<T> {
+      return true;
+    }
+
+    isNone(): this is None<T> {
+      return false;
+    }
+
+    unwrap(): T {
+      return this.value;
+    }
+
+    unwrapOr(_val: T): T {
+      return this.value;
+    }
+
+    unwrapOrElse(_fn: () => T): T {
+      return this.value;
+    }
+
+    expect(_msg: string): T {
+      return this.value;
+    }
+
+    map<U>(fn: (val: T) => U): Option<U> {
+      return Some(fn(this.value));
+    }
+
+    okOr<E>(_: E): Result<T, E> {
+      return Result.Ok(this.value);
+    }
+
+    and<U>(obtb: Option<U>): Option<U> {
+      return obtb;
+    }
+
+    andThen<U>(fn: (val: T) => Option<U>): Option<U> {
+      return fn(this.value);
+    }
+
+    or(_optb: Option<T>): Option<T> {
+      return Some(this.value);
+    }
+
+    orElse(_fn: () => Option<T>): Option<T> {
+      return Some(this.value);
+    }
   }
-  okOr<E>(_: E): Result<T, E> {
-    return new Ok(this.value);
+
+  export class _None<T = never> implements OptionBase<T> {
+    isSome(): this is Some<T> {
+      return false;
+    }
+
+    isNone(): this is None<T> {
+      return true;
+    }
+
+    unwrap(): T {
+      throw new UnwrapError();
+    }
+
+    unwrapOr(val: T): T {
+      return val;
+    }
+
+    unwrapOrElse(fn: () => T): T {
+      return fn();
+    }
+
+    expect(msg: string): T {
+      throw new UnwrapError(msg);
+    }
+
+    map<U>(_fn: (val: T) => U): Option<U> {
+      return None<U>();
+    }
+
+    okOr<E>(err: E): Result<T, E> {
+      return Result.Err(err);
+    }
+
+    and<U>(_obtb: Option<U>): Option<U> {
+      return None<U>();
+    }
+
+    andThen<U>(_fn: (val: T) => Option<U>): Option<U> {
+      return None<U>();
+    }
+
+    or(optb: Option<T>): Option<T> {
+      return optb;
+    }
+
+    orElse(fn: () => Option<T>): Option<T> {
+      return fn();
+    }
   }
-  okOrElse<E>(_: () => E): Result<T, E> {
-    return new Ok(this.value);
-  }
-  and<U>(optb: Option<U>): Option<U> {
-    return optb;
-  }
-  andThen<U>(op: (value: T) => Option<U>): Option<U> {
-    return op(this.value);
-  }
-  filter(predicate: (value: T) => boolean): Option<T> {
-    return predicate(this.value) ? this : new None();
-  }
-  or(_: Option<T>): Option<T> {
-    return this;
-  }
-  orElse(_: () => Option<T>): Option<T> {
-    return this;
-  }
-  xor(optb: Option<T>): Option<T> {
-    return optb.isSome() ? new None() : this;
-  }
+
+  export const Some = <T>(value: T): Some<T> => new _Some(value);
+  export const None = <T = never>(): None<T> => new _None();
 }
-
-export class None implements OptionBase<never> {
-  isSome(): false {
-    return false;
-  }
-  isSomeAnd(_: (value: never) => boolean): false {
-    return false;
-  }
-  isNone(): true {
-    return true;
-  }
-  expect(msg: string): never {
-    throw new Error(`Error with: ${msg}`);
-  }
-  unwrap(): never {
-    throw new Error("Error with: None");
-  }
-  unwrapOr<T>(defaultValue: T): T {
-    return defaultValue;
-  }
-  unwrapOrElse<T>(op: () => T): T {
-    return op();
-  }
-  map<U>(_: (value: never) => U): Option<U> {
-    return this;
-  }
-  mapOr<U>(defaultValue: U, _: (value: never) => U): U {
-    return defaultValue;
-  }
-  mapOrElse<U>(defaultFn: () => U, _: (value: never) => U): U {
-    return defaultFn();
-  }
-  inspect<T>(_: (value: T) => unknown): ThisType<T> {
-    return this;
-  }
-  okOr<E>(error: E): Result<never, E> {
-    return new Err(error);
-  }
-  okOrElse<E>(error: () => E): Result<never, E> {
-    return new Err(error());
-  }
-  and<U>(_: Option<U>): Option<U> {
-    return this;
-  }
-  andThen<U>(_: (value: never) => Option<U>): Option<U> {
-    return this;
-  }
-  filter(_: (value: never) => boolean): Option<never> {
-    return this;
-  }
-  or<T>(optb: Option<T>): Option<T> {
-    return optb;
-  }
-  orElse<T>(op: () => Option<T>): Option<T> {
-    return op();
-  }
-  xor<T>(optb: Option<T>): Option<T> {
-    return optb.isNone() ? this : optb;
-  }
-}
-export type Option<T> = Some<T> | None;
+export type Option<T> = Option.Some<T> | Option.None<T>;
+export const Some = Option.Some;
+export const None = Option.None;

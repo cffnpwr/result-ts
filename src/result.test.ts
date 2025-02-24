@@ -1,432 +1,217 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, it } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { Err, Ok, type Result } from "./result.ts";
+import { UnwrapError } from "./error.ts";
+import { None, Some } from "./option.ts";
 
-import { Err, Ok, Result } from "./result";
+describe("result.ts", () => {
+  const exOk: Result<number, number> = Ok(1);
+  const exErr: Result<number, number> = Err(1);
 
-describe("isOk", () => {
-  it("Returns `true` if the result is `Ok`.", () => {
-    const x: Result<number, string> = new Ok(-3);
+  describe("等価性", () => {
+    it("[正常系] 同一の値を持つOkは等価である", () => {
+      const ok1 = Ok(1);
+      const ok2 = Ok(1);
 
-    expect(x.isOk()).toBe(true);
+      expect(ok1).toEqual(ok2);
+    });
+
+    it("[正常系] 異なる値を持つOkは等価でない", () => {
+      const ok1 = Ok(1);
+      const ok2 = Ok(2);
+
+      expect(ok1).not.toEqual(ok2);
+    });
+
+    it("[正常系] 同一の値を持つErrは等価である", () => {
+      const err1 = Err(1);
+      const err2 = Err(1);
+
+      expect(err1).toEqual(err2);
+    });
+
+    it("[正常系] 異なる値を持つErrは等価でない", () => {
+      const err1 = Err(1);
+      const err2 = Err(2);
+
+      expect(err1).not.toEqual(err2);
+    });
+
+    it("[正常系] OkとErrは等価でない", () => {
+      const ok = Ok(1);
+      const err = Err(1);
+
+      expect(ok).not.toEqual(err);
+    });
   });
 
-  it("Returns `false` if the result is `Err`.", () => {
-    const x: Result<number, string> = new Err("Some Error Message");
+  describe("isOk()", () => {
+    it("[正常系] OkでisOk()を実行するとtrueが返る", () => {
+      expect(exOk.isOk()).toBe(true);
+    });
 
-    expect(x.isOk()).toBe(false);
-  });
-});
-
-describe("isOkAnd", () => {
-  it("Returns `true` if the result is `Ok` and the value inside of it matches a predicate.", () => {
-    const x: Result<number, string> = new Ok(2);
-
-    expect(x.isOkAnd((x) => x > 1)).toBe(true);
+    it("[正常系] ErrでisOk()を実行するとfalseが返る", () => {
+      expect(exErr.isOk()).toBe(false);
+    });
   });
 
-  it("Returns `false` if the result is `Ok` and the value inside of it does not matche a predicate.", () => {
-    const x: Result<number, string> = new Ok(0);
+  describe("isErr()", () => {
+    it("[正常系] OkでisErr()を実行するとfalseが返る", () => {
+      expect(exOk.isErr()).toBe(false);
+    });
 
-    expect(x.isOkAnd((x) => x > 1)).toBe(false);
+    it("[正常系] ErrでisErr()を実行するとtrueが返る", () => {
+      expect(exErr.isErr()).toBe(true);
+    });
   });
 
-  it("Returns `false` if the result is `Err`", () => {
-    const x: Result<number, string> = new Err("hey");
+  describe("unwrap()", () => {
+    it("[正常系] Okでunwrap()を実行すると値が返る", () => {
+      expect(exOk.unwrap()).toBe(1);
+    });
 
-    expect(x.isOkAnd((x) => x > 1)).toBe(false);
-  });
-});
-
-describe("isErr", () => {
-  it("Returns `false` if the result is `Ok`", () => {
-    const x: Result<number, string> = new Ok(-3);
-
-    expect(x.isErr()).toBe(false);
+    it("[異常系] Errでunwrap()を実行するとUnwrapErrorを吐く", () => {
+      expect(() => exErr.unwrap()).toThrow(UnwrapError);
+    });
   });
 
-  it("Returns `true` if the result is `Err`.", () => {
-    const x: Result<number, string> = new Err("Some Error Message");
+  describe("unwrapOr()", () => {
+    it("[正常系] OkでunwrapOr()を実行すると自身の値を返す", () => {
+      expect(exOk.unwrapOr(2)).toBe(1);
+    });
 
-    expect(x.isOk()).toBe(false);
-  });
-});
-
-describe("isErrAnd", () => {
-  it("Returns `false` if the result is `Ok`", () => {
-    const x: Result<number, string> = new Ok(2);
-
-    expect(x.isErrAnd((e) => e === "hey")).toBe(false);
+    it("[正常系] ErrでunwrapOr()を実行すると引数の値を返す", () => {
+      expect(exErr.unwrapOr(2)).toBe(2);
+    });
   });
 
-  it("Returns `false` if the result is `Err` and the value inside of it does not matche a predicate.", () => {
-    const x: Result<number, string> = new Err("hi");
+  describe("unwrapOrElse()", () => {
+    it("[正常系] OkでunwrapOrElse()を実行すると自身の値を返す", () => {
+      expect(exOk.unwrapOrElse(() => 2)).toBe(1);
+    });
 
-    expect(x.isErrAnd((e) => e === "hey")).toBe(false);
+    it("[正常系] ErrでunwrapOrElse()を実行すると関数の戻り値を返す", () => {
+      expect(exErr.unwrapOrElse(() => 2)).toBe(2);
+    });
   });
 
-  it("Returns `true` if the result is `Err` and the value inside of it matches a predicate.", () => {
-    const x: Result<number, string> = new Err("hey");
+  describe("unwrapErr()", () => {
+    it("[異常系] OkでunwrapErr()を実行するとUnwrapErrorを吐く", () => {
+      expect(() => exOk.unwrapErr()).toThrow(UnwrapError);
+    });
 
-    expect(x.isErrAnd((e) => e === "hey")).toBe(true);
-  });
-});
-
-describe("ok", () => {
-  it("Converts from `Ok<T>` to `Some<T>`.", () => {
-    const x: Result<number, string> = new Ok(2);
-
-    expect(x.ok().isSome()).toBe(true);
-    expect(x.ok().unwrap()).toBe(2);
+    it("[正常系] ErrでunwrapErr()を実行すると自身の値を返す", () => {
+      expect(exErr.unwrapErr()).toBe(1);
+    });
   });
 
-  it("Converts from `Err<E>` to `None`.", () => {
-    const x: Result<number, string> = new Err("Nothing here!!");
+  describe("expect()", () => {
+    it("[正常系] Okでexpect()を実行すると値が返る", () => {
+      expect(exOk.expect("Error")).toBe(1);
+    });
 
-    expect(x.ok().isNone()).toBe(true);
-  });
-});
-
-describe("err", () => {
-  it("Converts from `Ok<T>` to `None`.", () => {
-    const x: Result<number, string> = new Ok(2);
-
-    expect(x.err().isNone()).toBe(true);
+    it("[異常系] Errでexpect()を実行するとUnwrapErrorを吐く", () => {
+      expect(() => exErr.expect("Error")).toThrow(new UnwrapError("Error"));
+    });
   });
 
-  it("Converts from `Err<E>` to `Some<T>`.", () => {
-    const x: Result<number, string> = new Err("Nothing here!!");
+  describe("map()", () => {
+    it("[正常系] Okでmap()を実行すると引数の関数を実行した結果のOkが返る", () => {
+      const expected: Result<string, number> = Ok("1");
 
-    expect(x.err().isSome()).toBe(true);
-    expect(x.err().unwrap()).toBe("Nothing here!!");
-  });
-});
+      expect(exOk.map((val) => val.toString())).toEqual(expected);
+    });
 
-describe("map", () => {
-  it("Maps a `Result<T, E>` to `Result<U, E>` by applying a function to a contained `Ok` value.", () => {
-    const x: Result<number, string> = new Ok(2);
-
-    expect(x.map((x) => `${x}`).unwrap()).toBe("2");
+    it("[正常系] Errでmap()を実行すると自身の値を返す", () => {
+      expect(exErr.map((val) => val.toString())).toEqual(exErr);
+    });
   });
 
-  it("Leaving an `Err` value untouched.", () => {
-    const x: Result<number, string> = new Err("hey");
+  describe("mapErr()", () => {
+    it("[正常系] OkでmapErr()を実行すると自身の値を返す", () => {
+      expect(exOk.mapErr((Err) => Err.toString())).toEqual(exOk);
+    });
 
-    expect(x.map((x: number) => `${x}`).unwrapErr()).toBe("hey");
-  });
-});
+    it("[正常系] ErrでmapErr()を実行すると引数の関数を実行した結果のErrが返る", () => {
+      const expected: Result<number, string> = Err("1");
 
-describe("mapOr", () => {
-  it("Applies a function to the contained value (if `Ok`).", () => {
-    const x: Result<string, string> = new Ok("foo");
-
-    expect(x.mapOr(42 as number, (x) => x.length)).toBe(3);
+      expect(exErr.mapErr((Err) => Err.toString())).toEqual(expected);
+    });
   });
 
-  it("Returns the provided default (if `Err`).", () => {
-    const x: Result<string, string> = new Err("bar");
+  describe("Ok()", () => {
+    it("[正常系] OkでOk()を実行するとSomeが返る", () => {
+      const expected = Some(1);
 
-    expect(x.mapOr(42 as number, (x: string) => x.length)).toBe(42);
-  });
-});
+      expect(exOk.ok()).toEqual(expected);
+    });
 
-describe("mapOrElse", () => {
-  const k = 21;
+    it("[正常系] ErrでOk()を実行するとNoneが返る", () => {
+      const expected = None();
 
-  it("Maps a `Result<T, E>` to `U` by applying fallback function `mapper` to a contained `Ok` value.", () => {
-    const x: Result<string, string> = new Ok("foo");
-
-    expect(
-      x.mapOrElse(
-        (_) => k * 2,
-        (x) => x.length,
-      ),
-    ).toBe(3);
+      expect(exErr.ok()).toEqual(expected);
+    });
   });
 
-  it("Maps a `Result<T, E>` to `U` by applying fallback function `defaultFn` to a contained `Err` value.", () => {
-    const x: Result<string, string> = new Err("bar");
+  describe("Err()", () => {
+    it("[正常系] OkでErr()を実行するとNoneが返る", () => {
+      const expected = None();
 
-    expect(
-      x.mapOrElse(
-        (_) => k * 2,
-        (x: string) => x.length,
-      ),
-    ).toBe(42);
-  });
-});
+      expect(exOk.err()).toEqual(expected);
+    });
 
-describe("mapErr", () => {
-  const stringify = (x: number) => `error code: ${x}`;
+    it("[正常系] ErrでErr()を実行するとSomeが返る", () => {
+      const expected = Some(1);
 
-  it("Maps a `Result<T, E>` to `Result<T, F>` by applying a function to a contained `Err` value.", () => {
-    const x: Result<number, number> = new Err(13);
-
-    expect(x.mapErr(stringify).unwrapErr()).toBe("error code: 13");
+      expect(exErr.err()).toEqual(expected);
+    });
   });
 
-  it("Leaving an `Ok` value untouched.", () => {
-    const x: Result<number, number> = new Ok(2);
+  describe("and()", () => {
+    it("[正常系] Okでand()を実行すると引数のResultを返す", () => {
+      const expected = Ok("1");
 
-    expect(x.mapErr(stringify).unwrap()).toBe(2);
-  });
-});
+      expect(exOk.and(expected)).toEqual(expected);
+    });
 
-describe("inspect", () => {
-  const closure = vi.fn((input: string) => input);
-
-  beforeEach(() => {
-    closure.mockReset();
+    it("[正常系] Errでand()を実行すると自身の値を返す", () => {
+      expect(exErr.and(Ok("1"))).toEqual(exErr);
+    });
   });
 
-  it("Calls the provided closure with a reference to the contained value (if `Ok`).", () => {
-    const x: Result<string, string> = new Ok("foo");
+  describe("andThen()", () => {
+    it("[正常系] OkでandThen()を実行すると引数の関数を実行した結果のResultが返る", () => {
+      const expected = Ok("1");
 
-    expect(x.inspect(closure)).toBe(x);
-    expect(closure).toHaveBeenCalledOnce();
+      expect(exOk.andThen((val) => Ok(val.toString()))).toEqual(expected);
+    });
+
+    it("[正常系] ErrでandThen()を実行すると自身の値を返す", () => {
+      expect(exErr.andThen((val) => Ok(val.toString()))).toEqual(exErr);
+    });
   });
 
-  it("Do nothing (if `Err`).", () => {
-    const x: Result<string, string> = new Err("bar");
+  describe("or()", () => {
+    it("[正常系] Okでor()を実行すると自身の値を返す", () => {
+      expect(exOk.or(Ok(2))).toEqual(exOk);
+    });
 
-    expect(x.inspect(closure)).toBe(x);
-    expect(closure).not.toHaveBeenCalled();
-  });
-});
+    it("[正常系] Errでor()を実行すると引数の値を返す", () => {
+      const expected = Ok(2);
 
-describe("inspectErr", () => {
-  const closure = vi.fn((input: string) => input);
-
-  beforeEach(() => {
-    closure.mockReset();
+      expect(exErr.or(expected)).toEqual(expected);
+    });
   });
 
-  it("Calls the provided closure with a reference to the contained value (if `Err`).", () => {
-    const x: Result<string, string> = new Err("bar");
+  describe("orElse()", () => {
+    it("[正常系] OkでorElse()を実行すると自身の値を返す", () => {
+      expect(exOk.orElse(() => Ok(2))).toEqual(exOk);
+    });
 
-    expect(x.inspectErr(closure)).toBe(x);
-    expect(closure).toHaveBeenCalledOnce();
-  });
+    it("[正常系] ErrでorElse()を実行すると関数の戻り値を返す", () => {
+      const expected = Ok(2);
 
-  it("Do nothing (if `Ok`).", () => {
-    const x: Result<string, string> = new Ok("foo");
-
-    expect(x.inspectErr(closure)).toBe(x);
-    expect(closure).not.toHaveBeenCalled();
-  });
-});
-
-describe("expect", () => {
-  it("Returns the contained `Ok` value, consuming the self value.", () => {
-    const x: Result<string, string> = new Ok("foo");
-
-    expect(x.expect("error")).toBe("foo");
-  });
-
-  it("throw `msg`, if contained `Err`.", () => {
-    const x: Result<string, string> = new Err("bar");
-
-    expect(() => x.expect("error")).toThrowError("error");
-  });
-});
-
-describe("expectErr", () => {
-  it("Returns the contained `Err` value, consuming the self value.", () => {
-    const x: Result<string, string> = new Err("bar");
-
-    expect(x.expectErr("error")).toBe("bar");
-  });
-
-  it("throw `msg`, if contained `Ok`.", () => {
-    const x: Result<string, string> = new Ok("foo");
-
-    expect(() => x.expectErr("error")).toThrowError("error");
-  });
-});
-
-describe("unwrap", () => {
-  it("Returns the contained `Ok` value, consuming the self value.", () => {
-    const x: Result<string, string> = new Ok("foo");
-
-    expect(x.unwrap()).toBe("foo");
-  });
-
-  it("throw an Error with `Err`", () => {
-    const x: Result<string, string> = new Err("bar");
-
-    expect(() => x.unwrap()).toThrowError("bar");
-  });
-});
-
-describe("unwrapErr", () => {
-  it("Returns the contained `Err` value, consuming the self value.", () => {
-    const x: Result<string, string> = new Err("bar");
-
-    expect(x.unwrapErr()).toBe("bar");
-  });
-
-  it("throw an Error with `Ok`", () => {
-    const x: Result<string, string> = new Ok("foo");
-
-    // expect(x.unwrapErr()).toThrowError(new Error("Error with: foo"));
-    expect(() => x.unwrapErr()).toThrowError("foo");
-  });
-});
-
-describe("unwrapOr", () => {
-  it("Returns the contained `Ok` value.", () => {
-    const x: Result<string, string> = new Ok("foo");
-
-    expect(x.unwrapOr("hoge")).toBe("foo");
-  });
-
-  it("Returns a provided default value.", () => {
-    const x: Result<string, string> = new Err("bar");
-
-    expect(x.unwrapOr("hoge")).toBe("hoge");
-  });
-});
-
-describe("unwrapOrElse", () => {
-  it("Returns the contained `Ok` value.", () => {
-    const x: Result<string, string> = new Ok("foo");
-
-    expect(x.unwrapOrElse((e: string) => `error: ${e}`)).toBe("foo");
-  });
-
-  it("Returns computes it from a closure.", () => {
-    const x: Result<string, string> = new Err("bar");
-
-    expect(x.unwrapOrElse((e) => `error: ${e}`)).toBe("error: bar");
-  });
-});
-
-describe("and", () => {
-  it("Returns `res` if the result is `Ok`.", () => {
-    const x: Result<number, string> = new Ok(2);
-    const y: Result<number, string> = new Ok(4);
-
-    expect(x.and(y).isOk()).toBe(true);
-    expect(x.and(y).unwrap()).toBe(4);
-  });
-
-  it("Otherwise returns the `Err` value of self. (`Ok` and `Err`)", () => {
-    const x: Result<number, string> = new Ok(2);
-    const y: Result<number, string> = new Err("late error");
-
-    expect(x.and(y).isErr()).toBe(true);
-    expect(x.and(y).unwrapErr()).toBe("late error");
-  });
-
-  it("Otherwise returns the `Err` value of self. (`Err` and `Ok`)", () => {
-    const x: Result<number, string> = new Err("early error");
-    const y: Result<number, string> = new Ok(2);
-
-    expect(x.and(y).isErr()).toBe(true);
-    expect(x.and(y).unwrapErr()).toBe("early error");
-  });
-
-  it("Otherwise returns the `Err` value of self. (`Err` and `Err`)", () => {
-    const x: Result<number, string> = new Err("not a 2");
-    const y: Result<number, string> = new Err("late error");
-
-    expect(x.and(y).isErr()).toBe(true);
-    expect(x.and(y).unwrapErr()).toBe("not a 2");
-  });
-});
-
-describe("andThen", () => {
-  const stringify = (x: number) => {
-    if (x < 0) {
-      return new Err("must be positive number");
-    }
-
-    return new Ok(`${x}`);
-  };
-
-  it("Calls `op` if the result is `Ok`.", () => {
-    const x: Result<number, string> = new Ok(2);
-
-    expect(x.andThen(stringify).isOk()).toBe(true);
-    expect(x.andThen(stringify).unwrap()).toBe("2");
-  });
-
-  it("Otherwise returns the `Err` value of self. (`Ok` and `Err`)", () => {
-    const x: Result<number, string> = new Ok(-2);
-
-    expect(x.andThen(stringify).isErr()).toBe(true);
-    expect(x.andThen(stringify).unwrapErr()).toBe("must be positive number");
-  });
-
-  it("Otherwise returns the `Err` value of self. (`Err` and `Ok`)", () => {
-    const x: Result<number, string> = new Err("not a number");
-
-    expect(x.andThen(stringify).isErr()).toBe(true);
-    expect(x.andThen(stringify).unwrapErr()).toBe("not a number");
-  });
-});
-
-describe("or", () => {
-  it("Returns `res` if the result is `Err`", () => {
-    const x: Result<number, string> = new Err("not a 2");
-    const y: Result<number, string> = new Err("late error");
-
-    expect(x.or(y).isErr()).toBe(true);
-    expect(x.or(y).unwrapErr()).toBe("late error");
-  });
-
-  it("Otherwise returns the `Ok` value of self. (`Ok` and `Ok`)", () => {
-    const x: Result<number, string> = new Ok(2);
-    const y: Result<number, string> = new Ok(4);
-
-    expect(x.or(y).isOk()).toBe(true);
-    expect(x.or(y).unwrap()).toBe(2);
-  });
-
-  it("Otherwise returns the `Ok` value of self. (`Ok` and `Err`)", () => {
-    const x: Result<number, string> = new Ok(2);
-    const y: Result<number, string> = new Err("late error");
-
-    expect(x.or(y).isOk()).toBe(true);
-    expect(x.or(y).unwrap()).toBe(2);
-  });
-
-  it("Otherwise returns the `Ok` value of self. (`Err` and `Ok`)", () => {
-    const x: Result<number, string> = new Err("early error");
-    const y: Result<number, string> = new Ok(4);
-
-    expect(x.or(y).isOk()).toBe(true);
-    expect(x.or(y).unwrap()).toBe(4);
-  });
-});
-
-describe("orElse", () => {
-  const sq = (x: number) => new Ok(x * x);
-  const err = (x: number) => new Err(x);
-
-  it("Returns `res` if the result is `Err`", () => {
-    const x: Result<number, number> = new Err(2);
-
-    expect(x.orElse(err).isErr()).toBe(true);
-    expect(x.orElse(err).unwrapErr()).toBe(2);
-  });
-
-  it("Otherwise returns the `Ok` value of self. (`Ok` and `Ok`)", () => {
-    const x: Result<number, string> = new Ok(2);
-
-    expect(x.orElse(sq).isOk()).toBe(true);
-    expect(x.orElse(sq).unwrap()).toBe(2);
-  });
-
-  it("Otherwise returns the `Ok` value of self. (`Ok` and `Err`)", () => {
-    const x: Result<number, string> = new Ok(2);
-
-    expect(x.orElse(err).isOk()).toBe(true);
-    expect(x.orElse(err).unwrap()).toBe(2);
-  });
-
-  it("Otherwise returns the `Ok` value of self. (`Err` and `Ok`)", () => {
-    const x: Result<number, number> = new Err(2);
-
-    expect(x.orElse(sq).isOk()).toBe(true);
-    expect(x.orElse(sq).unwrap()).toBe(4);
+      expect(exErr.orElse(() => expected)).toEqual(expected);
+    });
   });
 });

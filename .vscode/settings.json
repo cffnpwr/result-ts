@@ -1,20 +1,21 @@
 {
-  "typescript.updateImportsOnFileMove.enabled": "always",
+  "deno.enable": true,
+  "deno.lint": true,
+  "deno.codeLens.test": true,
+  "editor.formatOnSave": true,
+  "explorer.fileNesting.enabled": true,
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.tabSize": 2,
-    "editor.insertSpaces": true,
-    "editor.formatOnSave": true
+    "editor.defaultFormatter": "denoland.vscode-deno"
   },
-  "typescript.format.semicolons": "insert",
-  "javascript.format.semicolons": "insert",
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.tabSize": 2,
-    "editor.insertSpaces": true,
-    "editor.formatOnSave": true
+  "[javascript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
   },
-  "eslint.codeActionsOnSave.mode": "all",
-  "eslint.experimental.useFlatConfig": false,
-  "git.enableCommitSigning": true
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.js, ${capture}.*ts",
+    "deno.json": "deno.lock"
+  },
+  "prettify-ts.maxDepth": 10000,
+  "prettify-ts.hidePrivateProperties": false,
+  "prettify-ts.maxSubProperties": 10000,
+  "prettify-ts.maxUnionMembers": 15000
 }
