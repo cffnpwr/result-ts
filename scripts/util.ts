@@ -38,7 +38,12 @@ export const stderr = (data: unknown) => {
   Deno.stderr.writeSync(encoder.encode(msg));
 };
 export const printSeparator = () => {
-  const columns = Deno.consoleSize().columns;
+  let columns: number;
+  try {
+    columns = Deno.consoleSize().columns;
+  } catch {
+    columns = 5;
+  }
   stdout("=".repeat(columns - 1));
 };
 
