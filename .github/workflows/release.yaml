@@ -1,12 +1,9 @@
 name: Release
 on:
-  pull_request_target:
-    branches:
-      - release
+  issues:
     types:
       - labeled
       - unlabeled
-      - synchronize
       - opened
       - edited
 
@@ -17,9 +14,7 @@ jobs:
       release_level: ${{ steps.check_labels.outputs.release_level }}
     steps:
       - name: Checkout
-        uses: ./.github/actions/checkout
-        with:
-          pr_number: ${{ github.event.pull_request.number }}
+        uses: actions/checkout@v4
 
       - name: Fetch labels
         id: labels
@@ -27,7 +22,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          json=$(gh pr view ${{ github.event.pull_request.number }} --json labels -q '.labels | map(.name)')
+          json=$(gh pr view ${{ github.event.issue.number }} --json labels -q '.labels | map(.name)')
           echo "json=$json" >> "$GITHUB_OUTPUT"
 
       - name: Check labels
@@ -63,8 +58,6 @@ jobs:
     needs:
       - fetch_label
     uses: ./.github/workflows/runtime_test.yaml
-    with:
-      pr_number: ${{ github.event.pull_request.number }}
 
   update_version:
     needs:
@@ -75,9 +68,7 @@ jobs:
       new_version: ${{ steps.get_new_version.outputs.new_version }}
     steps:
       - name: Checkout
-        uses: ./.github/actions/checkout
-        with:
-          pr_number: ${{ github.event.pull_request.number }}
+        uses: actions/checkout@v4
 
       - name: Get previous version
         id: get_prev_version
@@ -116,12 +107,26 @@ jobs:
 
       - name: Commit changes
         if: steps.get_current_version.outputs.current_version == steps.get_prev_version.outputs.prev_version
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           if ! git diff --exit-code --quiet; then
             git add .
             git commit -m "chore: bump version"
-            git push origin ${{ github.event.pull_request.head.ref }}
+            git branch -f chore/${{ steps.get_current_version.outputs.current_version }}
+            git push origin chore/${{ steps.get_current_version.outputs.current_version }}
+            gh pr create --title "chore: update to ${{ steps.get_current_version.outputs.current_version }}" --base main --head chore/${{ steps.get_current_version.outputs.current_version }}
+            gh pr merge chore/${{ steps.get_current_version.outputs.current_version }} --auto --squash
+            git push origin --delete release/${{ steps.get_current_version.outputs.current_version }}
           fi
+
+      - name: Create release PR
+
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr create --title "Release ${{ steps.get_current_version.outputs.current_version }}" --base release --head main
 
       - name: Get new version
         id: get_new_version
@@ -138,10 +143,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh pr merge ${{ github.event.pull_request.number }} --auto --squash
-
-      - name: Delete branch
-        run: git push origin --delete ${{ github.event.pull_request.head.ref }}
+        run: gh pr merge release/${{ needs.update_version.outputs.new_version }} --auto --squash
 
   create_release:
     needs:

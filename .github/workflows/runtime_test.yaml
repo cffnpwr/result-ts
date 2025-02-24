@@ -5,12 +5,6 @@ on:
       - main
       - release
   workflow_call:
-    inputs:
-      pr_number:
-        type: number
-        description: "Pull Request Number"
-        required: true
-        default: ${{ github.event.pull_request.number }}
 
 jobs:
   runtime_test:
@@ -23,9 +17,14 @@ jobs:
           - deno
     steps:
       - name: Checkout
+        if: github.event_name == 'pull_request_target'
         uses: ./.github/actions/checkout
         with:
-          pr_number: ${{ github.event_name == 'workflow_call' && github.event.inputs.pr_number || github.event.pull_request.number }}
+          pr_number: ${{ github.event.pull_request.number }}
+
+      - name: Checkout
+        if: github.event_name == 'workflow_call'
+        uses: actions/checkout@v4
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
