@@ -210,14 +210,6 @@
       "jsr:@std/testing@^1.0.9",
       "jsr:@ts-morph/ts-morph@^25.0.1",
       "npm:zod@^3.24.2"
-    ],
-    "members": {
-      "runtime-test/deno": {
-        "dependencies": [
-          "jsr:@std/expect@^1.0.13",
-          "jsr:@std/testing@^1.0.9"
-        ]
-      }
-    }
+    ]
   }
 }

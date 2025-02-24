@@ -9,11 +9,6 @@
     "runtime-test": "deno run --allow-read --allow-write --allow-net --allow-run ./scripts/runtime-test.ts",
     "update-version": "deno run --allow-read --allow-write --allow-run ./scripts/update-version.ts"
   },
-  "workspace": {
-    "members": [
-      "./runtime-test/deno"
-    ]
-  },
   "exclude": [
     "./runtime-test/"
   ],
