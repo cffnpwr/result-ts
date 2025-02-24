@@ -139,7 +139,7 @@ jobs:
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
-        run: gh pr create --title "Release ${{ steps.get_current_version.outputs.current_version }}" --base release --head main
+        run: gh pr create --title "Release ${{ steps.get_current_version.outputs.current_version }}" --body "Release ${{ steps.get_current_version.outputs.current_version }}" --base release --head main
 
   merge_pr:
     needs:
