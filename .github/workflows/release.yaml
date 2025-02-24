@@ -130,7 +130,7 @@ jobs:
             git branch -f chore/${{ env.NEW_VERSION }}
             git push -f origin chore/${{ env.NEW_VERSION }}
             gh pr create --title "chore: bump version to ${{ env.NEW_VERSION }}" --body "bump version to ${{ env.NEW_VERSION }}" --base main --head chore/${{ env.NEW_VERSION }}
-            gh pr merge chore/${{ env.NEW_VERSION }} --auto --squash
+            gh pr merge chore/${{ env.NEW_VERSION }} --squash
             git push origin --delete chore/${{ env.NEW_VERSION }}
           fi
 
@@ -150,7 +150,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh pr merge release/${{ needs.update_version.outputs.new_version }} --auto --squash
+        run: gh pr merge release/${{ needs.update_version.outputs.new_version }} --squash
 
   create_release:
     needs:
