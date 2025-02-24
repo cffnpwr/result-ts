@@ -3,7 +3,6 @@ on:
   issues:
     types:
       - labeled
-      - unlabeled
       - opened
       - edited
 
