@@ -47,6 +47,12 @@ jobs:
         with:
           node-version: "22.x"
 
+      - name: Setup pnpm
+        if: matrix.runtime == 'node'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.x
+
       - name: Setup Bun
         if: matrix.runtime == 'bun'
         uses: oven-sh/setup-bun@v2
