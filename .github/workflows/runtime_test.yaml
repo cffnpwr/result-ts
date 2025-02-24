@@ -56,5 +56,9 @@ jobs:
       - name: Install Dependencies
         run: deno install
 
+      - name: Build package for node and bun
+        if: matrix.runtime == 'node' || matrix.runtime == 'bun'
+        run: deno task build-package
+
       - name: Run Tests
         run: deno task runtime-test ${{ matrix.runtime }}
