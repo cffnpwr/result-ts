@@ -7,6 +7,7 @@ on:
       - opened
       - edited
 
+concurrency: release-${{ github.event.issue.number }}
 jobs:
   fetch_label:
     runs-on: ubuntu-latest
@@ -22,7 +23,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          json=$(gh pr view ${{ github.event.issue.number }} --json labels -q '.labels | map(.name)')
+          json=$(gh issue view ${{ github.event.issue.number }} --json labels -q '.labels | map(.name)')
           echo "json=$json" >> "$GITHUB_OUTPUT"
 
       - name: Check labels
