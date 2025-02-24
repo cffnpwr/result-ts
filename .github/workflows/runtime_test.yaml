@@ -4,6 +4,13 @@ on:
     branches:
       - main
       - release
+    paths-ignore:
+      - "README.md"
+      - "LICENSE"
+      - ".gitignore"
+      - ".editorconfig"
+      - ".vscode/**"
+      - ".devcontainer/**"
   workflow_call:
 
 jobs:
@@ -18,9 +25,9 @@ jobs:
     steps:
       - name: Checkout
         if: github.event_name == 'pull_request_target'
-        uses: ./.github/actions/checkout
+        uses: actions/checkout@v4
         with:
-          pr_number: ${{ github.event.pull_request.number }}
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Checkout
         if: github.event_name == 'workflow_call'
