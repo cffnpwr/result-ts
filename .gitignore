@@ -131,3 +131,10 @@ dist
 
 # pnpm
 .pnpm-store/
+
+# dnt
+built-package/
+
+# runtime test
+/runtime-test/*
+!runtime-test/templates/
