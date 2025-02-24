@@ -127,8 +127,8 @@ jobs:
             git add .
             git commit -m "chore: bump version to ${{ env.NEW_VERSION }}"
             git branch -f chore/${{ env.NEW_VERSION }}
-            git push origin chore/${{ env.NEW_VERSION }}
-            gh pr create --title "chore: update to ${{ env.NEW_VERSION }}" --base main --head chore/${{ env.NEW_VERSION }}
+            git push -f origin chore/${{ env.NEW_VERSION }}
+            gh pr create --title "chore: bump version to ${{ env.NEW_VERSION }}" --body "bump version to ${{ env.NEW_VERSION }}" --base main --head chore/${{ env.NEW_VERSION }}
             gh pr merge chore/${{ env.NEW_VERSION }} --auto --squash
             git push origin --delete chore/${{ env.NEW_VERSION }}
           fi
