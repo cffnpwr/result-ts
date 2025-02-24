@@ -13,6 +13,9 @@ on:
       - ".devcontainer/**"
   workflow_call:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 jobs:
   runtime_test:
     runs-on: ubuntu-latest
@@ -30,7 +33,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Checkout
-        if: github.event_name == 'workflow_call'
+        if: github.event_name != 'pull_request_target'
         uses: actions/checkout@v4
 
       - name: Setup Deno

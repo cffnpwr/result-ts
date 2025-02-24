@@ -11,6 +11,9 @@ on:
       - ".vscode/**"
       - ".devcontainer/**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 jobs:
   unit_test:
     runs-on: ubuntu-latest
@@ -29,7 +32,7 @@ jobs:
         run: deno install
 
       - name: Run Tests
-        run: deno run test -A --coverage
+        run: deno test -A --coverage
 
       - name: Generate Coverage Report
         run: deno coverage --lcov > cov.lcov

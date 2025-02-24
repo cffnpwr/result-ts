@@ -3,11 +3,12 @@ on:
   issues:
     types:
       - labeled
-      - unlabeled
       - opened
       - edited
 
-concurrency: release-${{ github.event.issue.number }}
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 jobs:
   fetch_label:
     runs-on: ubuntu-latest
