@@ -71,6 +71,7 @@ jobs:
       new_version: ${{ steps.get_new_version.outputs.new_version }}
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
