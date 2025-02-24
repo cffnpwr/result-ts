@@ -13,7 +13,7 @@ jobs:
   fetch_label:
     runs-on: ubuntu-latest
     outputs:
-      release_level: ${{ steps.check_labels.outputs.release_level }}
+      release_level: ${{ steps.check_labels.outputs.result }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,6 +28,7 @@ jobs:
           echo "json=$json" >> "$GITHUB_OUTPUT"
 
       - name: Check labels
+        id: check_labels
         uses: actions/github-script@v6
         env:
           LABELS: ${{ steps.labels.outputs.json }}
@@ -53,7 +54,7 @@ jobs:
               process.exit(1);
             }
 
-            core.setOutput('release_level', releaseLevel)
+            return releaseLevel;
           result-encoding: string
 
   runtime_test:
