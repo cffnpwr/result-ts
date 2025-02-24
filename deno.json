@@ -1,12 +1,18 @@
 {
   "name": "@cffnpwr/result-ts",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Rust like Result type for TypeScript",
   "license": "MIT",
   "exports": "./index.ts",
   "tasks": {
     "build-package": "deno run --allow-env --allow-read --allow-write --allow-net --allow-run ./scripts/build-package.ts",
-    "runtime-test": "deno run --allow-read --allow-write --allow-net --allow-run ./scripts/runtime-test.ts"
+    "runtime-test": "deno run --allow-read --allow-write --allow-net --allow-run ./scripts/runtime-test.ts",
+    "update-version": "deno run --allow-read --allow-write --allow-run ./scripts/update-version.ts"
+  },
+  "workspace": {
+    "members": [
+      "./runtime-test/deno"
+    ]
   },
   "exclude": [
     "./runtime-test/"

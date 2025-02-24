@@ -104,14 +104,14 @@ interface ResultBase<T, E> {
 }
 
 export namespace Result {
-  class _Ok<T> implements ResultBase<T, never> {
+  class _Ok<T, E> implements ResultBase<T, E> {
     constructor(readonly value: T) {}
 
-    isOk(): this is Ok<T> {
+    isOk(): this is Ok<T, E> {
       return true;
     }
 
-    isErr<E>(): this is Err<E> {
+    isErr(): this is Err<T, E> {
       return false;
     }
 
@@ -127,7 +127,7 @@ export namespace Result {
       return this.value;
     }
 
-    unwrapErr<E>(): E {
+    unwrapErr(): E {
       throw new UnwrapError();
     }
 
@@ -135,11 +135,11 @@ export namespace Result {
       return this.value;
     }
 
-    map<U, E>(fn: (val: T) => U): Result<U, E> {
+    map<U>(fn: (val: T) => U): Result<U, never> {
       return Ok(fn(this.value));
     }
 
-    mapErr<U, E>(_fn: (err: E) => U): Result<T, U> {
+    mapErr<U>(_fn: (err: E) => U): Result<T, U> {
       return Ok(this.value);
     }
 
@@ -147,15 +147,15 @@ export namespace Result {
       return Option.Some(this.value);
     }
 
-    err<E>(): Option<E> {
+    err(): Option<E> {
       return Option.None<E>();
     }
 
-    and<U, E>(res: Result<U, E>): Result<U, E> {
+    and<U>(res: Result<U, E>): Result<U, E> {
       return res;
     }
 
-    andThen<U, E>(fn: (val: T) => Result<U, E>): Result<U, E> {
+    andThen<U>(fn: (val: T) => Result<U, E>): Result<U, E> {
       return fn(this.value);
     }
 
@@ -163,31 +163,31 @@ export namespace Result {
       return Ok(this.value);
     }
 
-    orElse<E, F>(_fn: (err: E) => Result<T, F>): Result<T, F> {
+    orElse<F>(_fn: (err: E) => Result<T, F>): Result<T, F> {
       return Ok(this.value);
     }
   }
 
-  class _Err<E> implements ResultBase<never, E> {
+  class _Err<T, E> implements ResultBase<T, E> {
     constructor(readonly error: E) {}
 
-    isOk<T>(): this is Ok<T> {
+    isOk(): this is Ok<T, E> {
       return false;
     }
 
-    isErr(): this is Err<E> {
+    isErr(): this is Err<T, E> {
       return true;
     }
 
-    unwrap<T>(): T {
+    unwrap(): T {
       throw new UnwrapError();
     }
 
-    unwrapOr<T>(val: T): T {
+    unwrapOr(val: T): T {
       return val;
     }
 
-    unwrapOrElse<T>(fn: () => T): T {
+    unwrapOrElse(fn: () => T): T {
       return fn();
     }
 
@@ -195,19 +195,19 @@ export namespace Result {
       return this.error;
     }
 
-    expect<T>(msg: string): T {
+    expect(msg: string): T {
       throw new UnwrapError(msg);
     }
 
-    map<T, U>(_fn: (val: T) => U): Result<U, E> {
+    map<U>(_fn: (val: T) => U): Result<U, E> {
       return Err(this.error);
     }
 
-    mapErr<T, U>(fn: (err: E) => U): Result<T, U> {
+    mapErr<U>(fn: (err: E) => U): Result<T, U> {
       return Err(fn(this.error));
     }
 
-    ok<T>(): Option<T> {
+    ok(): Option<T> {
       return Option.None<T>();
     }
 
@@ -219,28 +219,28 @@ export namespace Result {
       return Err(this.error);
     }
 
-    andThen<T, U>(_fn: (val: T) => Result<U, E>): Result<U, E> {
+    andThen<U>(_fn: (val: T) => Result<U, E>): Result<U, E> {
       return Err(this.error);
     }
 
-    or<T, F>(res: Result<T, F>): Result<T, F> {
+    or<F>(res: Result<T, F>): Result<T, F> {
       return res;
     }
 
-    orElse<T, F>(fn: (err: E) => Result<T, F>): Result<T, F> {
+    orElse<F>(fn: (err: E) => Result<T, F>): Result<T, F> {
       return fn(this.error);
     }
   }
 
-  export type Ok<T> = _Ok<T>;
-  export type Err<E> = _Err<E>;
-  export const Ok = <T>(
+  export type Ok<T, E> = _Ok<T, E>;
+  export type Err<T, E> = _Err<T, E>;
+  export const Ok = <T, E = never>(
     value: T extends never ? never : T,
-  ): Ok<T> => new _Ok(value);
-  export const Err = <E = unknown>(
+  ): Ok<T, E> => new _Ok(value);
+  export const Err = <E, T = never>(
     error: E extends never ? never : E,
-  ): Err<E> => new _Err(error);
+  ): Err<T, E> => new _Err(error);
 }
-export type Result<T, E> = Result.Ok<T> | Result.Err<E>;
+export type Result<T, E> = Result.Ok<T, E> | Result.Err<T, E>;
 export const Ok = Result.Ok;
 export const Err = Result.Err;

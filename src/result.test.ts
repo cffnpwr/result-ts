@@ -5,8 +5,8 @@ import { UnwrapError } from "./error.ts";
 import { None, Some } from "./option.ts";
 
 describe("result.ts", () => {
-  const exOk: Result<number, number> = Ok(1);
-  const exErr: Result<number, number> = Err(1);
+  const exOk = Ok(1) as Result<number, number>;
+  const exErr = Err(1) as Result<number, number>;
 
   describe("等価性", () => {
     it("[正常系] 同一の値を持つOkは等価である", () => {

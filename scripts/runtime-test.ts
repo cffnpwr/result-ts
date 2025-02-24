@@ -4,78 +4,56 @@ import { emptyDir } from "@std/fs";
 import { z } from "zod";
 import { Project, type SourceFile } from "@ts-morph/ts-morph";
 import { loadDenoJson } from "./load-deno-json.ts";
+import { printSeparator, runCmd, stderr, stdout } from "./util.ts";
 
 const runtimeSchema = z.enum(["node", "deno", "bun"]);
 type Runtime = z.infer<typeof runtimeSchema>;
 
-const templates = {
-  node: ["package.json", "vitest.config.ts"],
-  bun: ["package.json", "vitest.config.ts"],
-  deno: ["deno.json"],
-};
-
-const toString = (data: unknown) => {
-  let msg: string;
-  switch (typeof data) {
-    case "string":
-    case "number":
-    case "bigint":
-    case "boolean":
-    case "symbol":
-    case "function": {
-      msg = data.toString();
-      break;
-    }
-    case "undefined": {
-      msg = "undefined";
-      break;
-    }
-    case "object": {
-      msg = JSON.stringify(data);
-      break;
-    }
-    default: {
-      msg = `${data}`;
-    }
-  }
-  if (msg.slice(-1) !== "\n") {
-    msg += "\n";
-  }
-  return msg;
-};
-const stdout = (data: unknown) => {
-  const encoder = new TextEncoder();
-  const msg = toString(data);
-  Deno.stdout.writeSync(encoder.encode(msg));
-};
-const stderr = (data: unknown) => {
-  const encoder = new TextEncoder();
-  const msg = toString(data);
-  Deno.stderr.writeSync(encoder.encode(msg));
-};
-const printSeparator = () => {
-  const columns = Deno.consoleSize().columns;
-  stdout("=".repeat(columns - 1));
+const testConfig: {
+  [key in Runtime]: {
+    templates: string[];
+    exec: string;
+    install: string[];
+    test: string[];
+  };
+} = {
+  node: {
+    templates: ["package.json", "vitest.config.ts"],
+    exec: "pnpm",
+    install: ["install"],
+    test: ["test"],
+  },
+  bun: {
+    templates: ["package.json", "vitest.config.ts"],
+    exec: "bun",
+    install: ["install"],
+    test: ["test"],
+  },
+  deno: {
+    templates: ["deno.json"],
+    exec: "deno",
+    install: ["install"],
+    test: ["test"],
+  },
 };
 
 const cli = async () => {
-  const encoder = new TextEncoder();
   const args = parseArgs(Deno.args, {
-    string: ["help"],
+    boolean: ["help"],
     alias: {
       h: "help",
     },
   });
   if (args.help) {
-    const data = encoder.encode(`
-      Usage: runtime-test [options] [runtime]
+    const data = `
+Usage: runtime-test [options] [runtime]
 
-      Options:
-        -h, --help  Display this help message
+Options:
+  -h, --help  Display this help message
 
-      Arguments:
-        runtime     Specify the runtime to test (node, deno, bun)
-    `);
+Arguments:
+  runtime     Specify the runtime to test (node, deno, bun)
+    `;
     stdout(data);
     Deno.exit(0);
   }
@@ -94,6 +72,13 @@ const cli = async () => {
   await buildRuntimeTest(runtime);
   stdout(`Built runtime test for ${runtime}.`);
   printSeparator();
+
+  stdout(`Running runtime test for ${runtime}...`);
+  await runRuntimeTest(runtime);
+  stdout(`Ran runtime test for ${runtime}.`);
+  printSeparator();
+
+  stdout(`Finish runtime test for ${runtime}.`);
 };
 
 const buildRuntimeTest = async (runtime: Runtime) => {
@@ -182,12 +167,41 @@ const buildRuntimeTest = async (runtime: Runtime) => {
 
   // テンプレートファイルをコピー
   const templateDir = resolve(Deno.cwd(), "./runtime-test/templates");
-  const templateFiles = templates[runtime].map((f) => resolve(templateDir, f));
+  const templateFiles = testConfig[runtime].templates
+    .map((f) => resolve(templateDir, f));
   for (const f of templateFiles) {
+    // ファイルコピー
     const filename = basename(f);
     const outFile = resolve(outDir, filename);
     await Deno.copyFile(f, outFile);
+
+    // テンプレートリテラルを置換
+    let data = await Deno.readTextFile(outFile);
+    data = data.replaceAll(/\${runtime}/g, runtime)
+      .replaceAll(
+        /\${Runtime}/g,
+        runtime.charAt(0).toUpperCase() + runtime.slice(1),
+      )
+      .replaceAll(/\${node-only:(.*?)}/g, runtime === "node" ? "$1" : "")
+      .replaceAll(/\${deno-only:(.*?)}/g, runtime === "deno" ? "$1" : "")
+      .replaceAll(/\${bun-only:(.*?)}/g, runtime === "bun" ? "$1" : "");
+    await Deno.writeTextFile(outFile, data);
   }
+};
+
+const runRuntimeTest = async (runtime: Runtime) => {
+  const testDir = resolve(Deno.cwd(), `./runtime-test/${runtime}`);
+
+  const { exec, install, test } = testConfig[runtime];
+  stdout(`Installing dependencies...`);
+  await runCmd(exec, install, testDir);
+  stdout(`Installed dependencies.`);
+  printSeparator();
+
+  stdout(`Running tests...`);
+  await runCmd(exec, test, testDir);
+  stdout(`Ran tests.`);
+  printSeparator();
 };
 
 await cli();

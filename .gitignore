@@ -134,3 +134,7 @@ dist
 
 # dnt
 built-package/
+
+# runtime test
+/runtime-test/*
+!runtime-test/templates/

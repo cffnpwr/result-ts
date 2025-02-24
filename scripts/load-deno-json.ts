@@ -11,6 +11,26 @@ const denoJsonSchema = z.object({
   description: z.string().default(""),
   exports: z.union([z.string(), z.record(z.string())]).default("./index.ts"),
   license: z.string().optional(),
+  tasks: z.record(z.string()).optional(),
+  workspace: z.object({
+    members: z.array(z.string()).optional(),
+  }).optional(),
+  exclude: z.array(z.string()).optional(),
+  fmt: z.object({
+    indentWidth: z.number().optional(),
+    useTabs: z.boolean().optional(),
+    semiColons: z.boolean().optional(),
+    singleQuote: z.boolean().optional(),
+  }).optional(),
+  lint: z.object({
+    rules: z.object({
+      exclude: z.array(z.string()).optional(),
+    }).optional(),
+  }).optional(),
+  imports: z.record(z.string()).optional(),
+  publish: z.object({
+    include: z.array(z.string()).optional(),
+  }).optional(),
 });
 export type DenoJson = z.infer<typeof denoJsonSchema>;
 

@@ -1,0 +1,11 @@
+{
+  "name": "runtime-test-for-${runtime}",
+  "description": "Runtime test for ${Runtime}",
+  "scripts": {
+    "test": "vitest --run"
+  },
+  "devDependencies": {
+    "@cffnpwr/result-ts": "${node-only:link:}../../built-package",
+    "vitest": "^3.0.6"
+  }
+}

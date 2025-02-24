@@ -12,16 +12,18 @@ on:
       - ".devcontainer/**"
 
 jobs:
-  unittest:
+  unit_test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: ./.github/actions/checkout
+        with:
+          pr_number: ${{ github.event.pull_request.number }}
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.x
+          deno-version: "2.x"
 
       - name: Install Packages
         run: deno install
