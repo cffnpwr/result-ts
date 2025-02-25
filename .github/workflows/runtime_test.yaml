@@ -1,0 +1,70 @@
+name: Runtime Test
+on:
+  pull_request_target:
+    branches:
+      - main
+      - release
+    paths-ignore:
+      - "README.md"
+      - "LICENSE"
+      - ".gitignore"
+      - ".editorconfig"
+      - ".vscode/**"
+      - ".devcontainer/**"
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  runtime_test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        runtime:
+          - node
+          - bun
+          - deno
+    steps:
+      - name: Checkout
+        if: github.event_name == 'pull_request_target'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Checkout
+        if: github.event_name != 'pull_request_target'
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: "2.x"
+
+      - name: Setup Node
+        if: matrix.runtime == 'node'
+        uses: actions/setup-node@v2
+        with:
+          node-version: "22.x"
+
+      - name: Setup pnpm
+        if: matrix.runtime == 'node'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.x
+
+      - name: Setup Bun
+        if: matrix.runtime == 'bun'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.3"
+
+      - name: Install Dependencies
+        run: deno install
+
+      - name: Build package for node and bun
+        if: matrix.runtime == 'node' || matrix.runtime == 'bun'
+        run: deno task build-package
+
+      - name: Run Tests
+        run: deno task runtime-test ${{ matrix.runtime }}

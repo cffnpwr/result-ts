@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "EditorConfig.EditorConfig",
+    "christian-kohler.path-intellisense",
+    "denoland.vscode-deno",
+    "oderwat.indent-rainbow",
+    "github.vscode-github-actions"
+  ]
+}

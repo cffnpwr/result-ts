@@ -1,0 +1,21 @@
+coverage:
+  paths:
+    - cov.lcov
+codeToTestRatio:
+  code:
+    - "src/**/*.ts"
+    - "!src/**/*.test.ts"
+  test:
+    - "src/**/*.test.ts"
+testExecutionTime:
+  if: true
+diff:
+  datastores:
+    - artifact://${GITHUB_REPOSITORY}
+comment:
+  if: github.evemt_name == 'pull_request_target' || github.event_name == 'pull_request'
+  deletePrevious: true
+report:
+  if: is_default_branch
+  datastores:
+    - artifact://${GITHUB_REPOSITORY}

@@ -1,0 +1,26 @@
+{
+  "name": "Result-ts",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "features": {
+    "ghcr.io/devcontainers-community/features/deno:1": {},
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/michidk/devcontainers-features/bun:1": {}
+  },
+  "runArgs": [
+    "--userns=keep-id"
+  ],
+  "containerUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "EditorConfig.EditorConfig",
+        "christian-kohler.path-intellisense",
+        "denoland.vscode-deno",
+        "oderwat.indent-rainbow",
+        "github.vscode-github-actions"
+      ]
+    }
+  }
+}

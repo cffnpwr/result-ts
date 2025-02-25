@@ -1,0 +1,179 @@
+name: Release
+on:
+  issues:
+    types:
+      - labeled
+      - opened
+      - edited
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+jobs:
+  fetch_label:
+    runs-on: ubuntu-latest
+    outputs:
+      release_level: ${{ steps.check_labels.outputs.result }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch labels
+        id: labels
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          json=$(gh issue view ${{ github.event.issue.number }} --json labels -q '.labels | map(.name)')
+          echo "json=$json" >> "$GITHUB_OUTPUT"
+
+      - name: Check labels
+        id: check_labels
+        uses: actions/github-script@v6
+        env:
+          LABELS: ${{ steps.labels.outputs.json }}
+        with:
+          script: |
+            const { LABELS } = process.env;
+            const labels = JSON.parse(LABELS);
+            const releaseLabels = labels.filter((label) => label.startsWith("release/"));
+            if (releaseLabels.length == 0) {
+              core.setFailed('No release label found');
+              process.exit(1);
+            }
+
+            let releaseLevel;
+            if (releaseLabels.includes("release/major")) {
+              releaseLevel = "major";
+            } else if (releaseLabels.includes("release/minor")) {
+              releaseLevel = "minor";
+            } else if (releaseLabels.includes("release/patch")) {
+              releaseLevel = "patch";
+            } else {
+              core.setFailed('No release level found');
+              process.exit(1);
+            }
+
+            return releaseLevel;
+          result-encoding: string
+
+  runtime_test:
+    needs:
+      - fetch_label
+    uses: ./.github/workflows/runtime_test.yaml
+
+  update_version:
+    needs:
+      - fetch_label
+      - runtime_test
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.get_new_version.outputs.new_version }}
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get previous version
+        id: get_prev_version
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(gh release view --json tagName -q '.tagName' || echo "0.0.0")
+          echo "prev_version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Get current version from deno.json
+        id: get_current_version
+        run: |
+          version=$(cat deno.json | jq -r '.version')
+          echo "current_version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Deno
+        if: steps.get_current_version.outputs.current_version == steps.get_prev_version.outputs.prev_version
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: "2.x"
+
+      - name: Install Dependencies
+        if: steps.get_current_version.outputs.current_version == steps.get_prev_version.outputs.prev_version
+        run: deno install
+
+      - name: update version
+        if: steps.get_current_version.outputs.current_version == steps.get_prev_version.outputs.prev_version
+        run: deno task update-version ${{ needs.fetch_label.outputs.release_level }}
+
+      - name: Get new version
+        id: get_new_version
+        run: |
+          version=$(cat deno.json | jq -r '.version')
+          echo "new_version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Set git user
+        if: steps.get_current_version.outputs.current_version == steps.get_prev_version.outputs.prev_version
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit changes
+        if: steps.get_current_version.outputs.current_version == steps.get_prev_version.outputs.prev_version
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          NEW_VERSION: ${{ steps.get_new_version.outputs.new_version }}
+        run: |
+          if ! git diff --exit-code --quiet; then
+            git add .
+            git commit -m "chore: bump version to ${{ env.NEW_VERSION }}"
+            git branch -f chore/${{ env.NEW_VERSION }}
+            git push -f origin chore/${{ env.NEW_VERSION }}
+            gh pr create --title "chore: bump version to ${{ env.NEW_VERSION }}" --body "bump version to ${{ env.NEW_VERSION }}" --base main --head chore/${{ env.NEW_VERSION }}
+            gh pr merge chore/${{ env.NEW_VERSION }} --squash
+            git push origin --delete chore/${{ env.NEW_VERSION }}
+          fi
+
+      - name: Create release PR
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          NEW_VERSION: ${{ steps.get_new_version.outputs.new_version }}
+        run: gh pr create --title "Release ${{ env.NEW_VERSION }}" --body "Release ${{ env.NEW_VERSION }}" --base release --head main
+
+  merge_pr:
+    needs:
+      - update_version
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Merge PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh pr merge main --squash
+
+  create_release:
+    needs:
+      - update_version
+      - merge_pr
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NEW_VERSION: ${{ needs.update_version.outputs.new_version }}
+        run: |
+          gh release create ${{ env.NEW_VERSION }} --title "Release ${{ env.NEW_VERSION }}" --generate-notes --target release
+

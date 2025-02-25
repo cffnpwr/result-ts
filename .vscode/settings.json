@@ -1,0 +1,21 @@
+{
+  "deno.enable": true,
+  "deno.lint": true,
+  "deno.codeLens.test": true,
+  "editor.formatOnSave": true,
+  "explorer.fileNesting.enabled": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.js, ${capture}.*ts",
+    "deno.json": "deno.lock"
+  },
+  "prettify-ts.maxDepth": 10000,
+  "prettify-ts.hidePrivateProperties": false,
+  "prettify-ts.maxSubProperties": 10000,
+  "prettify-ts.maxUnionMembers": 15000
+}

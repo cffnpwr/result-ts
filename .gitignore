@@ -128,3 +128,13 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# pnpm
+.pnpm-store/
+
+# dnt
+built-package/
+
+# runtime test
+/runtime-test/*
+!runtime-test/templates/

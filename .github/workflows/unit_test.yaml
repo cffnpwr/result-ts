@@ -1,0 +1,45 @@
+name: Unit Test
+on:
+  pull_request_target:
+    branches:
+      - main
+    paths-ignore:
+      - "README.md"
+      - "LICENSE"
+      - ".gitignore"
+      - ".editorconfig"
+      - ".vscode/**"
+      - ".devcontainer/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  unit_test:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: "2.x"
+
+      - name: Install Packages
+        run: deno install
+
+      - name: Run Tests
+        run: deno test -A --coverage
+
+      - name: Generate Coverage Report
+        run: deno coverage --lcov > cov.lcov
+
+      - name: Run octoocv
+        uses: k1LoW/octocov-action@v1
+        with:
+          config: ./.octocov.yaml
