@@ -20,7 +20,7 @@ jobs:
           deno-version: "2.x"
 
       - name: Install Packages
-        run: deno installl
+        run: deno install
 
       - name: Publish package
         run: deno publish
