@@ -1,6 +1,6 @@
 {
   "name": "@cffnpwr/result-ts",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Rust like Result type for TypeScript",
   "exports": "./index.ts",
   "license": "MIT",
