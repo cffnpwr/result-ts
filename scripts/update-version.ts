@@ -59,7 +59,7 @@ Arguments:
   }
   denoJson.version = newVersion;
 
-  const newDenoJson = JSON.stringify(denoJson, null, 2);
+  const newDenoJson = `${JSON.stringify(denoJson, null, 2)}\n`;
   if (args["dry-run"]) {
     stdout(newDenoJson);
     return;
