@@ -135,7 +135,6 @@ jobs:
           fi
 
       - name: Create release PR
-
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
