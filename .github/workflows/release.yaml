@@ -139,13 +139,17 @@ jobs:
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
-        run: gh pr create --title "Release ${{ steps.get_current_version.outputs.current_version }}" --body "Release ${{ steps.get_current_version.outputs.current_version }}" --base release --head main
+          NEW_VERSION: ${{ steps.get_new_version.outputs.new_version }}
+        run: gh pr create --title "Release ${{ env.NEW_VERSION }}" --body "Release ${{ env.NEW_VERSION }}" --base release --head main
 
   merge_pr:
     needs:
       - update_version
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Merge PR
         env:
           GH_TOKEN: ${{ github.token }}
@@ -158,6 +162,9 @@ jobs:
       - merge_pr
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
