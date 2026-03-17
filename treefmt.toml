@@ -1,0 +1,10 @@
+[global]
+excludes = [".git/**", ".serena/**", "result/**"]
+
+[formatter.nix]
+command = "nixfmt"
+includes = ["*.nix", "flake.nix"]
+
+[formatter.yaml]
+command = "yamlfmt"
+includes = ["*.yaml", "*.yml"]

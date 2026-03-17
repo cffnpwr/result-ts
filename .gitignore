@@ -138,3 +138,6 @@ built-package/
 # runtime test
 /runtime-test/*
 !runtime-test/templates/
+
+# direnv directory
+.direnv/
