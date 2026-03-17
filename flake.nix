@@ -22,6 +22,7 @@
           # Development shell
           devShells.default = pkgs.mkShell {
             packages = with pkgs; [
+              bun
               git
               nil
               nixd
@@ -51,6 +52,16 @@
                 exec ''${USER_SHELL:-$SHELL}
               fi
             '';
+          };
+
+          # Runtime test shell
+          devShells.runtime-test = pkgs.mkShell {
+            packages = with pkgs; [
+              bun
+              nodejs
+              nodePackages.pnpm
+              deno
+            ];
           };
         };
     };

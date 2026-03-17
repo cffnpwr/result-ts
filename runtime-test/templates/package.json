@@ -5,7 +5,7 @@
     "test": "vitest --run"
   },
   "devDependencies": {
-    "@cffnpwr/result-ts": "${node-only:link:}../../built-package",
+    "@cffnpwr/result-ts": "${node-only:link:}../../dist",
     "vitest": "^3.0.6"
   }
 }

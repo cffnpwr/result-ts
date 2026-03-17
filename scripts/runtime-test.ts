@@ -1,9 +1,8 @@
-import { parseArgs } from "@std/cli/parse-args";
-import { basename, resolve } from "@std/path";
-import { emptyDir } from "@std/fs";
+import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "fs";
+import { basename, resolve } from "path";
 import { z } from "zod";
-import { Project, type SourceFile } from "@ts-morph/ts-morph";
-import { loadDenoJson } from "./load-deno-json.ts";
+import { Project, type SourceFile } from "ts-morph";
+import { loadPackageJson } from "./load-package-json.ts";
 import { printSeparator, runCmd, stderr, stdout } from "./util.ts";
 
 const runtimeSchema = z.enum(["node", "deno", "bun"]);
@@ -37,100 +36,95 @@ const testConfig: {
   },
 };
 
-const cli = async () => {
-  const args = parseArgs(Deno.args, {
-    boolean: ["help"],
-    alias: {
-      h: "help",
-    },
-  });
-  if (args.help) {
-    const data = `
-Usage: runtime-test [options] [runtime]
+const args = process.argv.slice(2);
+const helpFlag = args.includes("-h") || args.includes("--help");
+const positional = args.filter((a) => !a.startsWith("-"));
+
+if (helpFlag) {
+  stdout(`
+Usage: runtime-test [options] <runtime>
 
 Options:
   -h, --help  Display this help message
 
 Arguments:
   runtime     Specify the runtime to test (node, deno, bun)
-    `;
-    stdout(data);
-    Deno.exit(0);
-  }
+  `);
+  process.exit(0);
+}
 
-  const _runtime = runtimeSchema.safeParse(args._[0]);
-  if (!_runtime.success) {
-    const e = _runtime.error.format()._errors.join("\n");
-    stderr(`Invalid runtime: ${e}`);
-    Deno.exit(1);
-  }
-  const runtime = _runtime.data;
-  stdout(`Start runtime test for ${runtime}...`);
-  printSeparator();
+const _runtime = runtimeSchema.safeParse(positional[0]);
+if (!_runtime.success) {
+  const e = _runtime.error.format()._errors.join("\n");
+  stderr(`Invalid runtime: ${e}`);
+  process.exit(1);
+}
+const runtime = _runtime.data;
 
-  stdout(`Building runtime test for ${runtime}...`);
-  await buildRuntimeTest(runtime);
-  stdout(`Built runtime test for ${runtime}.`);
-  printSeparator();
+stdout(`Start runtime test for ${runtime}...`);
+printSeparator();
 
-  stdout(`Running runtime test for ${runtime}...`);
-  await runRuntimeTest(runtime);
-  stdout(`Ran runtime test for ${runtime}.`);
-  printSeparator();
+stdout(`Building runtime test for ${runtime}...`);
+await buildRuntimeTest(runtime);
+stdout(`Built runtime test for ${runtime}.`);
+printSeparator();
 
-  stdout(`Finish runtime test for ${runtime}.`);
-};
+stdout(`Running runtime test for ${runtime}...`);
+runRuntimeTest(runtime);
+stdout(`Ran runtime test for ${runtime}.`);
+printSeparator();
 
-const buildRuntimeTest = async (runtime: Runtime) => {
-  const denoJsonPath = resolve(Deno.cwd(), "./deno.json");
-  const denoJson = await loadDenoJson(denoJsonPath);
-  const outDir = resolve(Deno.cwd(), `./runtime-test/${runtime}`);
-  const testFilesDir = resolve(Deno.cwd(), "./src");
+stdout(`Finish runtime test for ${runtime}.`);
+
+async function buildRuntimeTest(runtime: Runtime): Promise<void> {
+  const rootDir = resolve(import.meta.dir, "..");
+  const packageJson = loadPackageJson(resolve(rootDir, "./package.json"));
+  const outDir = resolve(rootDir, `./runtime-test/${runtime}`);
+  const testFilesDir = resolve(rootDir, "./src");
   stdout(`Target directory: ${outDir}`);
-  await emptyDir(outDir);
+
+  // Clean and recreate output directory
+  rmSync(outDir, { recursive: true, force: true });
+  mkdirSync(outDir, { recursive: true });
 
   const project = new Project();
-  // ソースディレクトリからテストファイルを取得
+  // Collect test files from the source directory
   const testFiles = project.addSourceFilesAtPaths(
     `${testFilesDir}/**/*.test.ts`,
   );
   stdout(
-    `Found ${testFiles.length} files: [\n  ${
-      testFiles.map((f) => f.getFilePath()).join(",\n  ")
-    }\n]`,
+    `Found ${testFiles.length} files: [\n  ${testFiles.map((f) => f.getFilePath()).join(",\n  ")}\n]`,
   );
+
   const runtimeTestFiles: SourceFile[] = [];
   for (const f of testFiles) {
     const importDeclarations = f.getImportDeclarations();
 
-    // Importから./result.ts, ./error.ts, ./option.tsから読み込んでいる物を抽出
-    const regex = /^((.{1,2})\/)+([^\/]+)$/;
+    // Extract local relative imports (e.g. ./result.ts)
+    const localRegex = /^((.{1,2})\/)+([^/]+)$/;
     const localImports = importDeclarations.filter((d) =>
-      regex.test(d.getModuleSpecifierValue())
+      localRegex.test(d.getModuleSpecifierValue()),
     );
     const imports = localImports
-      .map((d) => d.getNamedImports())
-      .flat()
+      .flatMap((d) => d.getNamedImports())
       .map((d) => d.getFullText().trim());
-    // Importから./result.ts, ./error.ts, ./option.tsを削除
+
+    // Identify bun:test imports before any remove() calls to avoid accessing removed nodes
+    const bunTestImports = importDeclarations.filter(
+      (d) => d.getModuleSpecifierValue() === "bun:test",
+    );
+
+    // ローカルインポートと bun:test インポートをまとめて削除
     localImports.forEach((d) => d.remove());
-    // ローカルのImportを追加
+    bunTestImports.forEach((d) => d.remove());
+
     if (imports.length > 0) {
       f.addImportDeclaration({
         namedImports: imports,
-        moduleSpecifier: denoJson.name.trim(),
+        moduleSpecifier: packageJson.name.trim(),
       });
     }
 
-    // Importから@std/testing/bdd, @std/expectを削除
-    importDeclarations
-      .filter((d) =>
-        !localImports.includes(d) &&
-        d.getModuleSpecifierValue().startsWith("@std")
-      )
-      .forEach((d) => d.remove());
-
-    // テストランナーを追加
     switch (runtime) {
       case "node":
       case "bun": {
@@ -161,47 +155,40 @@ const buildRuntimeTest = async (runtime: Runtime) => {
     const sourceFile = f.copyToDirectory(outDir, { overwrite: true });
     runtimeTestFiles.push(sourceFile);
   }
-  runtimeTestFiles.forEach((f) => {
-    f.saveSync();
-  });
+  runtimeTestFiles.forEach((f) => f.saveSync());
 
-  // テンプレートファイルをコピー
-  const templateDir = resolve(Deno.cwd(), "./runtime-test/templates");
-  const templateFiles = testConfig[runtime].templates
-    .map((f) => resolve(templateDir, f));
-  for (const f of templateFiles) {
-    // ファイルコピー
-    const filename = basename(f);
-    const outFile = resolve(outDir, filename);
-    await Deno.copyFile(f, outFile);
+  // テンプレートファイルをコピーしてテンプレートリテラルを置換
+  const templateDir = resolve(rootDir, "./runtime-test/templates");
+  for (const templateName of testConfig[runtime].templates) {
+    const src = resolve(templateDir, templateName);
+    const dest = resolve(outDir, basename(templateName));
+    cpSync(src, dest);
 
-    // テンプレートリテラルを置換
-    let data = await Deno.readTextFile(outFile);
-    data = data.replaceAll(/\${runtime}/g, runtime)
+    let data = readFileSync(dest, "utf-8");
+    data = data
+      .replaceAll(/\${runtime}/g, runtime)
       .replaceAll(
         /\${Runtime}/g,
         runtime.charAt(0).toUpperCase() + runtime.slice(1),
       )
-      .replaceAll(/\${node-only:(.*?)}/g, runtime === "node" ? "$1" : "")
-      .replaceAll(/\${deno-only:(.*?)}/g, runtime === "deno" ? "$1" : "")
-      .replaceAll(/\${bun-only:(.*?)}/g, runtime === "bun" ? "$1" : "");
-    await Deno.writeTextFile(outFile, data);
+      .replaceAll(/\${node-only:(.*?)}/gs, runtime === "node" ? "$1" : "")
+      .replaceAll(/\${deno-only:(.*?)}/gs, runtime === "deno" ? "$1" : "")
+      .replaceAll(/\${bun-only:(.*?)}/gs, runtime === "bun" ? "$1" : "");
+    writeFileSync(dest, data);
   }
-};
+}
 
-const runRuntimeTest = async (runtime: Runtime) => {
-  const testDir = resolve(Deno.cwd(), `./runtime-test/${runtime}`);
-
+function runRuntimeTest(runtime: Runtime): void {
+  const testDir = resolve(import.meta.dir, `../runtime-test/${runtime}`);
   const { exec, install, test } = testConfig[runtime];
+
   stdout(`Installing dependencies...`);
-  await runCmd(exec, install, testDir);
+  runCmd(exec, install, testDir);
   stdout(`Installed dependencies.`);
   printSeparator();
 
   stdout(`Running tests...`);
-  await runCmd(exec, test, testDir);
+  runCmd(exec, test, testDir);
   stdout(`Ran tests.`);
   printSeparator();
-};
-
-await cli();
+}

@@ -1,31 +1,35 @@
-import { build, emptyDir, type EntryPoint } from "@deno/dnt";
-import { resolve } from "@std/path";
-import { loadDenoJson } from "./load-deno-json.ts";
+import { writeFileSync, readFileSync } from "fs";
+import { resolve } from "path";
+import { runCmd } from "./util.ts";
 
-const outDir = resolve(Deno.cwd(), "./built-package");
-await emptyDir(outDir);
+const rootDir = resolve(import.meta.dir, "..");
 
-const denoJson = await loadDenoJson(resolve(Deno.cwd(), "./deno.json"));
-const getEntryPoints = (
-  exports: string | Record<string, string>,
-): (string | EntryPoint)[] => {
-  if (typeof exports === "string") {
-    return [exports];
+runCmd("bun", ["run", "build"], rootDir);
+
+// Generate dist/package.json with publishConfig.exports applied
+// Rewrite paths from root-relative (./dist/...) to dist-relative (./...)
+const pkg = JSON.parse(readFileSync(resolve(rootDir, "package.json"), "utf-8"));
+const rewritePaths = (value: unknown): unknown => {
+  if (typeof value === "string") {
+    return value.replace(/^\.\/dist\//, "./");
   }
-  return Object.entries(exports).map(([k, v]) => ({ name: k, path: v }));
+  if (typeof value === "object" && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, rewritePaths(v)]),
+    );
+  }
+  return value;
 };
-
-await build({
-  entryPoints: getEntryPoints(denoJson.exports),
-  outDir,
-  shims: {},
-  importMap: resolve(Deno.cwd(), "./deno.json"),
-  test: false,
-  typeCheck: false,
-  package: {
-    name: denoJson.name,
-    version: denoJson.version,
-    description: denoJson.description,
-    license: denoJson.license,
-  },
-});
+const distPkg = {
+  ...pkg,
+  exports: rewritePaths(pkg.publishConfig?.exports ?? pkg.exports),
+  types: typeof pkg.types === "string" ? pkg.types.replace(/^\.\/dist\//, "./") : pkg.types,
+};
+delete distPkg.publishConfig;
+delete distPkg.devDependencies;
+delete distPkg.scripts;
+delete distPkg.files;
+writeFileSync(
+  resolve(rootDir, "dist/package.json"),
+  JSON.stringify(distPkg, null, 2) + "\n",
+);
