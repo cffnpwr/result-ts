@@ -1,0 +1,18 @@
+{
+  "lsp": {
+    "nixd": {
+      "settings": {
+        "formatting": {
+          "command": ["nixfmt"],
+        },
+      },
+    },
+  },
+  "languages": {
+    "Nix": {
+      "language_servers": ["nixd", "!nil", "..."],
+      "formatter": "language_server",
+      "semantic_tokens": "combined",
+    },
+  },
+}
