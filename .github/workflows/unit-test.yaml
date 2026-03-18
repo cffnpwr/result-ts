@@ -26,17 +26,13 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v21
-        with:
-          extra-conf: |
-            sandbox = false
-            ssl-cert-file = /etc/ssl/certs/ca-certificates.crt
+        uses: DeterminateSystems/determinate-nix-action@131015bad844610e5e6300f8a143bf625d3e74f4 # v3.17.0
 
       - name: Install dependencies
         run: nix develop --command bun install --frozen-lockfile
@@ -45,6 +41,6 @@ jobs:
         run: nix develop --command bun test --coverage --coverage-reporter=lcov --coverage-dir=./coverage
 
       - name: Run octocov
-        uses: k1LoW/octocov-action@v1
+        uses: k1LoW/octocov-action@73d561f65d59e66899ed5c87e4621a913b5d5c20 # v1.5.0
         with:
           config: ./.octocov.yaml
