@@ -5,42 +5,71 @@ TypeScript向けのRustライクなResult型・Option型の実装。
 [![GitHub License](https://img.shields.io/github/license/cffnpwr/result-ts?style=flat)](/LICENSE)
 [![Unit Test](https://github.com/cffnpwr/result-ts/actions/workflows/unit-test.yaml/badge.svg)](https://github.com/cffnpwr/result-ts/actions/workflows/unit-test.yaml)
 [![Runtime Test](https://github.com/cffnpwr/result-ts/actions/workflows/runtime-test.yaml/badge.svg)](https://github.com/cffnpwr/result-ts/actions/workflows/runtime-test.yaml)
+[![npm Version](https://img.shields.io/npm/v/%40cffnpwr%2Fresult-ts?style=flat)](https://www.npmjs.com/package/@cffnpwr/result-ts)
 [![JSR Version](https://jsr.io/badges/@cffnpwr/result-ts)](https://jsr.io/@cffnpwr/result-ts)
 
 [README.md for English is available here](./README.md)
 
 ## インストール
 
-### Node.js
+### npm
 
-npm
+```sh
+npm install @cffnpwr/result-ts
+```
 
-```bash
+or
+
+```sh
 npx jsr add @cffnpwr/result-ts
 ```
 
-yarn
+### yarn
 
-```bash
+```sh
+yarn add @cffnpwr/result-ts
+```
+
+or
+
+```sh
 yarn dlx jsr add @cffnpwr/result-ts
 ```
 
-pnpm
+### pnpm
 
-```bash
-pnpm dlx jsr add @cffnpwr/result-ts
+```sh
+pnpm add @cffnpwr/result-ts
 ```
 
-### Deno
+or
 
-```bash
-deno add jsr:@cffnpwr/result-ts
+```sh
+pnpm dlx jsr add @cffnpwr/result-ts
 ```
 
 ### Bun
 
-```bash
+```sh
+bun add @cffnpwr/result-ts
+```
+
+or
+
+```sh
 bunx jsr add @cffnpwr/result-ts
+```
+
+### Deno
+
+```sh
+deno add npm:@cffnpwr/result-ts
+```
+
+or
+
+```sh
+deno add jsr:@cffnpwr/result-ts
 ```
 
 ## 使い方
