@@ -81,6 +81,7 @@ interface OptionBase<T> {
   orElse(fn: () => Option<T>): Option<T>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Option {
   export type Some<T> = _Some<T>;
   export type None<T> = _None<T>;
@@ -113,7 +114,7 @@ export namespace Option {
     }
 
     map<U>(fn: (val: T) => U): Option<U> {
-      return Some(fn(this.value));
+      return new _Some(fn(this.value));
     }
 
     okOr<E>(_: E): Result<T, E> {
@@ -129,11 +130,11 @@ export namespace Option {
     }
 
     or(_optb: Option<T>): Option<T> {
-      return Some(this.value);
+      return new _Some(this.value);
     }
 
     orElse(_fn: () => Option<T>): Option<T> {
-      return Some(this.value);
+      return new _Some(this.value);
     }
   }
 
@@ -163,7 +164,7 @@ export namespace Option {
     }
 
     map<U>(_fn: (val: T) => U): Option<U> {
-      return None<U>();
+      return new _None<U>();
     }
 
     okOr<E>(err: E): Result<T, E> {
@@ -171,11 +172,11 @@ export namespace Option {
     }
 
     and<U>(_obtb: Option<U>): Option<U> {
-      return None<U>();
+      return new _None<U>();
     }
 
     andThen<U>(_fn: (val: T) => Option<U>): Option<U> {
-      return None<U>();
+      return new _None<U>();
     }
 
     or(optb: Option<T>): Option<T> {

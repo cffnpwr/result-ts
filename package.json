@@ -24,6 +24,7 @@
     "build": "tsdown",
     "test": "bun test src",
     "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
     "runtime-test": "bun scripts/runtime-test.ts",
     "publish:jsr": "jsr publish"
   },

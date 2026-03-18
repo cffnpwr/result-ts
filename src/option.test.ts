@@ -1,6 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { None, type Option, Some } from "./option.ts";
+
+import type { Option } from "./option.ts";
+
 import { UnwrapError } from "./error.ts";
+import { None, Some } from "./option.ts";
 import { Err, Ok } from "./result.ts";
 
 describe("option.ts", () => {

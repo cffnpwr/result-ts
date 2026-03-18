@@ -1,5 +1,6 @@
-import { writeFileSync, readFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
+
 import { runCmd } from "./util.ts";
 
 const rootDir = resolve(import.meta.dir, "..");
@@ -31,5 +32,5 @@ delete distPkg.scripts;
 delete distPkg.files;
 writeFileSync(
   resolve(rootDir, "dist/package.json"),
-  JSON.stringify(distPkg, null, 2) + "\n",
+  `${JSON.stringify(distPkg, null, 2)}\n`,
 );

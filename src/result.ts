@@ -103,6 +103,7 @@ interface ResultBase<T, E> {
   orElse<F>(fn: (err: E) => Result<T, F>): Result<T, F>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Result {
   class _Ok<T, E> implements ResultBase<T, E> {
     constructor(readonly value: T) {}
@@ -136,11 +137,11 @@ export namespace Result {
     }
 
     map<U>(fn: (val: T) => U): Result<U, E> {
-      return Ok(fn(this.value));
+      return new _Ok(fn(this.value));
     }
 
     mapErr<U>(_fn: (err: E) => U): Result<T, U> {
-      return Ok(this.value);
+      return new _Ok(this.value);
     }
 
     ok(): Option<T> {
@@ -160,11 +161,11 @@ export namespace Result {
     }
 
     or<F>(_res: Result<T, F>): Result<T, F> {
-      return Ok(this.value);
+      return new _Ok(this.value);
     }
 
     orElse<F>(_fn: (err: E) => Result<T, F>): Result<T, F> {
-      return Ok(this.value);
+      return new _Ok(this.value);
     }
   }
 
@@ -200,11 +201,11 @@ export namespace Result {
     }
 
     map<U>(_fn: (val: T) => U): Result<U, E> {
-      return Err(this.error);
+      return new _Err(this.error);
     }
 
     mapErr<U>(fn: (err: E) => U): Result<T, U> {
-      return Err(fn(this.error));
+      return new _Err(fn(this.error));
     }
 
     ok(): Option<T> {
@@ -216,11 +217,11 @@ export namespace Result {
     }
 
     and<U>(_res: Result<U, E>): Result<U, E> {
-      return Err(this.error);
+      return new _Err(this.error);
     }
 
     andThen<U>(_fn: (val: T) => Result<U, E>): Result<U, E> {
-      return Err(this.error);
+      return new _Err(this.error);
     }
 
     or<F>(res: Result<T, F>): Result<T, F> {

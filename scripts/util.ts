@@ -39,7 +39,7 @@ export const stderr = (data: unknown): void => {
 };
 
 export const printSeparator = (): void => {
-  const columns = process.stdout.columns ?? 5;
+  const columns = process.stdout.columns;
   stdout("=".repeat(columns - 1));
 };
 

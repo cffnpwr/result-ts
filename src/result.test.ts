@@ -1,7 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import { Err, Ok, type Result } from "./result.ts";
+
+import type { Result } from "./result.ts";
+
 import { UnwrapError } from "./error.ts";
 import { None, Some } from "./option.ts";
+import { Err, Ok } from "./result.ts";
 
 describe("result.ts", () => {
   const exOk = Ok(1) as Result<number, number>;
