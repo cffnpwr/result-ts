@@ -1,15 +1,15 @@
 # result-ts
 
-Rust-like Result/Option type implementation for TypeScript.
+TypeScript向けのRustライクなResult型・Option型の実装。
 
 [![GitHub License](https://img.shields.io/github/license/cffnpwr/result-ts?style=flat)](/LICENSE)
 [![Unit Test](https://github.com/cffnpwr/result-ts/actions/workflows/unit-test.yaml/badge.svg)](https://github.com/cffnpwr/result-ts/actions/workflows/unit-test.yaml)
 [![Runtime Test](https://github.com/cffnpwr/result-ts/actions/workflows/runtime-test.yaml/badge.svg)](https://github.com/cffnpwr/result-ts/actions/workflows/runtime-test.yaml)
 [![JSR Version](https://jsr.io/badges/@cffnpwr/result-ts)](https://jsr.io/@cffnpwr/result-ts)
 
-[日本語版のREADMEはこちら](./README-ja.md)
+[README.md for English is available here](./README.md)
 
-## Installation
+## インストール
 
 ### Node.js
 
@@ -43,9 +43,9 @@ deno add jsr:@cffnpwr/result-ts
 bunx jsr add @cffnpwr/result-ts
 ```
 
-## How to Use
+## 使い方
 
-### Result type
+### Result型
 
 ```typescript
 import { type Result, Ok, Err } from "@cffnpwr/result-ts";
@@ -61,19 +61,19 @@ console.log(result2.isOk()); // false
 console.log(result2.isErr()); // true
 console.log(result2.unwrapErr()); // "error"
 
-// Transform values
+// 値の変換
 const doubled = result1.map((n) => n * 2);
 console.log(doubled.unwrap()); // 84
 
-// Chain operations
+// 操作の連結
 const parsed: Result<number, string> = Ok("42").andThen((s) => {
   const n = Number(s);
-  return Number.isNaN(n) ? Err("not a number") : Ok(n);
+  return Number.isNaN(n) ? Err("数値ではありません") : Ok(n);
 });
 console.log(parsed.unwrap()); // 42
 ```
 
-### Option type
+### Option型
 
 ```typescript
 import { type Option, Some, None } from "@cffnpwr/result-ts";
@@ -89,16 +89,16 @@ console.log(none.isSome()); // false
 console.log(none.isNone()); // true
 console.log(none.unwrapOr(-1)); // -1
 
-// Convert to Result
-const result = none.okOr("no value");
+// Resultへの変換
+const result = none.okOr("値がありません");
 console.log(result.isErr()); // true
-console.log(result.unwrapErr()); // "no value"
+console.log(result.unwrapErr()); // "値がありません"
 ```
 
-## API Reference
+## APIリファレンス
 
-See [docs/API.md](./docs/API.md) for full API documentation.
+全APIドキュメントは[docs/API-ja.md](./docs/API-ja.md)を参照。
 
-## License
+## ライセンス
 
 [MIT License](./LICENSE)
