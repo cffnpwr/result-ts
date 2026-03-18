@@ -135,7 +135,7 @@ export namespace Result {
       return this.value;
     }
 
-    map<U>(fn: (val: T) => U): Result<U, never> {
+    map<U>(fn: (val: T) => U): Result<U, E> {
       return Ok(fn(this.value));
     }
 

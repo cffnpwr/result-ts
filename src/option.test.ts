@@ -1,5 +1,4 @@
-import { describe, it } from "@std/testing/bdd";
-import { expect } from "@std/expect";
+import { describe, expect, it } from "bun:test";
 import { None, type Option, Some } from "./option.ts";
 import { UnwrapError } from "./error.ts";
 import { Err, Ok } from "./result.ts";

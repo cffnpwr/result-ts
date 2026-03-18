@@ -3,7 +3,6 @@ on:
   pull_request_target:
     branches:
       - main
-      - release
     paths-ignore:
       - "README.md"
       - "LICENSE"
@@ -14,57 +13,41 @@ on:
   workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  group: ${{ github.workflow_ref }}-${{ github.event.number }}
   cancel-in-progress: true
+
+permissions: {}
+
 jobs:
   runtime_test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        runtime:
-          - node
-          - bun
-          - deno
+    name: Runtime Test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - name: Checkout
-        if: github.event_name == 'pull_request_target'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
-      - name: Checkout
-        if: github.event_name != 'pull_request_target'
-        uses: actions/checkout@v4
-
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v21
         with:
-          deno-version: "2.x"
+          extra-conf: |
+            sandbox = false
+            ssl-cert-file = /etc/ssl/certs/ca-certificates.crt
 
-      - name: Setup Node
-        if: matrix.runtime == 'node'
-        uses: actions/setup-node@v2
-        with:
-          node-version: "22.x"
+      - name: Install dependencies
+        run: nix develop .#runtime-test --command bun install --frozen-lockfile
 
-      - name: Setup pnpm
-        if: matrix.runtime == 'node'
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.x
+      - name: Build package
+        run: nix develop .#runtime-test --command bun run build
 
-      - name: Setup Bun
-        if: matrix.runtime == 'bun'
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.2.3"
+      - name: Runtime Test (node)
+        run: nix develop .#runtime-test --command bun run runtime-test node
 
-      - name: Install Dependencies
-        run: deno install
+      - name: Runtime Test (bun)
+        run: nix develop .#runtime-test --command bun run runtime-test bun
 
-      - name: Build package for node and bun
-        if: matrix.runtime == 'node' || matrix.runtime == 'bun'
-        run: deno task build-package
-
-      - name: Run Tests
-        run: deno task runtime-test ${{ matrix.runtime }}
+      - name: Runtime Test (deno)
+        run: nix develop .#runtime-test --command bun run runtime-test deno

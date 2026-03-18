@@ -1,4 +1,6 @@
-export const toString = (data: unknown) => {
+import { spawnSync } from "child_process";
+
+export const toString = (data: unknown): string => {
   let msg: string;
   switch (typeof data) {
     case "string":
@@ -27,36 +29,26 @@ export const toString = (data: unknown) => {
   }
   return msg;
 };
-export const stdout = (data: unknown) => {
-  const encoder = new TextEncoder();
-  const msg = toString(data);
-  Deno.stdout.writeSync(encoder.encode(msg));
+
+export const stdout = (data: unknown): void => {
+  process.stdout.write(toString(data));
 };
-export const stderr = (data: unknown) => {
-  const encoder = new TextEncoder();
-  const msg = toString(data);
-  Deno.stderr.writeSync(encoder.encode(msg));
+
+export const stderr = (data: unknown): void => {
+  process.stderr.write(toString(data));
 };
-export const printSeparator = () => {
-  let columns: number;
-  try {
-    columns = Deno.consoleSize().columns;
-  } catch {
-    columns = 5;
-  }
+
+export const printSeparator = (): void => {
+  const columns = process.stdout.columns ?? 5;
   stdout("=".repeat(columns - 1));
 };
 
-export const runCmd = async (
-  exec: string,
-  args: string[],
-  cwd: string = Deno.cwd(),
-) => {
-  const cmd = new Deno.Command(exec, {
-    args: args,
-    cwd: cwd,
-    stdout: "inherit",
-    stderr: "inherit",
+export const runCmd = (exec: string, args: string[], cwd?: string): void => {
+  const result = spawnSync(exec, args, {
+    cwd: cwd ?? process.cwd(),
+    stdio: "inherit",
   });
-  await cmd.output();
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
 };

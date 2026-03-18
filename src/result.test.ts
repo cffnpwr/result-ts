@@ -1,5 +1,4 @@
-import { describe, it } from "@std/testing/bdd";
-import { expect } from "@std/expect";
+import { describe, expect, it } from "bun:test";
 import { Err, Ok, type Result } from "./result.ts";
 import { UnwrapError } from "./error.ts";
 import { None, Some } from "./option.ts";
@@ -123,13 +122,16 @@ describe("result.ts", () => {
     });
 
     it("[正常系] Errでmap()を実行すると自身の値を返す", () => {
-      expect(exErr.map((val) => val.toString())).toEqual(exErr);
+      const expected: Result<string, number> = Err(1);
+      expect(exErr.map((val) => val.toString())).toEqual(expected);
     });
   });
 
   describe("mapErr()", () => {
     it("[正常系] OkでmapErr()を実行すると自身の値を返す", () => {
-      expect(exOk.mapErr((Err) => Err.toString())).toEqual(exOk);
+      const expected: Result<number, string> = Ok(1);
+
+      expect(exOk.mapErr((Err) => Err.toString())).toEqual(expected);
     });
 
     it("[正常系] ErrでmapErr()を実行すると引数の関数を実行した結果のErrが返る", () => {
@@ -175,7 +177,9 @@ describe("result.ts", () => {
     });
 
     it("[正常系] Errでand()を実行すると自身の値を返す", () => {
-      expect(exErr.and(Ok("1"))).toEqual(exErr);
+      const expected: Result<string, number> = Err(1);
+
+      expect(exErr.and(Ok("1"))).toEqual(expected);
     });
   });
 
@@ -187,13 +191,15 @@ describe("result.ts", () => {
     });
 
     it("[正常系] ErrでandThen()を実行すると自身の値を返す", () => {
-      expect(exErr.andThen((val) => Ok(val.toString()))).toEqual(exErr);
+      const expected: Result<string, number> = Err(1);
+
+      expect(exErr.andThen((val) => Ok(val.toString()))).toEqual(expected);
     });
   });
 
   describe("or()", () => {
     it("[正常系] Okでor()を実行すると自身の値を返す", () => {
-      expect(exOk.or(Ok(2))).toEqual(exOk);
+      expect(exOk.or(Ok<number, number>(2))).toEqual(exOk);
     });
 
     it("[正常系] Errでor()を実行すると引数の値を返す", () => {
@@ -205,7 +211,7 @@ describe("result.ts", () => {
 
   describe("orElse()", () => {
     it("[正常系] OkでorElse()を実行すると自身の値を返す", () => {
-      expect(exOk.orElse(() => Ok(2))).toEqual(exOk);
+      expect(exOk.orElse(() => Ok<number, number>(2))).toEqual(exOk);
     });
 
     it("[正常系] ErrでorElse()を実行すると関数の戻り値を返す", () => {
