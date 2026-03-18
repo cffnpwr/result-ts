@@ -17,7 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
   },
-  "include": ["src/**/*", "scripts/**/*", "*.config.ts"]
+  "include": ["src/**/*", "scripts/**/*", "**/*.config.ts"],
 }

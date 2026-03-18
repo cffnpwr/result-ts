@@ -1,7 +1,11 @@
-import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "fs";
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { basename, resolve } from "path";
+
+import type { SourceFile } from "ts-morph";
+
+import { Project } from "ts-morph";
 import { z } from "zod";
-import { Project, type SourceFile } from "ts-morph";
+
 import { loadPackageJson } from "./load-package-json.ts";
 import { printSeparator, runCmd, stderr, stdout } from "./util.ts";
 
@@ -102,9 +106,7 @@ async function buildRuntimeTest(runtime: Runtime): Promise<void> {
 
     // Extract local relative imports (e.g. ./result.ts)
     const localRegex = /^((.{1,2})\/)+([^/]+)$/;
-    const localImports = importDeclarations.filter((d) =>
-      localRegex.test(d.getModuleSpecifierValue()),
-    );
+    const localImports = importDeclarations.filter((d) => localRegex.test(d.getModuleSpecifierValue()));
     const imports = localImports
       .flatMap((d) => d.getNamedImports())
       .map((d) => d.getFullText().trim());
@@ -182,13 +184,13 @@ function runRuntimeTest(runtime: Runtime): void {
   const testDir = resolve(import.meta.dir, `../runtime-test/${runtime}`);
   const { exec, install, test } = testConfig[runtime];
 
-  stdout(`Installing dependencies...`);
+  stdout("Installing dependencies...");
   runCmd(exec, install, testDir);
-  stdout(`Installed dependencies.`);
+  stdout("Installed dependencies.");
   printSeparator();
 
-  stdout(`Running tests...`);
+  stdout("Running tests...");
   runCmd(exec, test, testDir);
-  stdout(`Ran tests.`);
+  stdout("Ran tests.");
   printSeparator();
 }

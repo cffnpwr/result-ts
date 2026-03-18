@@ -1,23 +1,18 @@
 name: Runtime Test
 on:
-  pull_request_target:
+  pull_request:
     branches:
       - main
-    paths-ignore:
-      - "README.md"
-      - "LICENSE"
-      - ".gitignore"
-      - ".editorconfig"
-      - ".vscode/**"
-      - ".devcontainer/**"
+    paths:
+      - "**/*.ts"
+      - "**/package.json"
+      - "**/bun.lock"
+      - "**/tsconfig.json"
   workflow_call:
-
 concurrency:
   group: ${{ github.workflow_ref }}-${{ github.event.number }}
   cancel-in-progress: true
-
 permissions: {}
-
 jobs:
   runtime_test:
     name: Runtime Test
@@ -25,29 +20,18 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
-
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v21
-        with:
-          extra-conf: |
-            sandbox = false
-            ssl-cert-file = /etc/ssl/certs/ca-certificates.crt
-
+        uses: DeterminateSystems/determinate-nix-action@131015bad844610e5e6300f8a143bf625d3e74f4 # v3.17.0
       - name: Install dependencies
         run: nix develop .#runtime-test --command bun install --frozen-lockfile
-
       - name: Build package
-        run: nix develop .#runtime-test --command bun run build
-
+        run: nix develop .#runtime-test --command bun run build-package
       - name: Runtime Test (node)
         run: nix develop .#runtime-test --command bun run runtime-test node
-
       - name: Runtime Test (bun)
         run: nix develop .#runtime-test --command bun run runtime-test bun
-
       - name: Runtime Test (deno)
         run: nix develop .#runtime-test --command bun run runtime-test deno

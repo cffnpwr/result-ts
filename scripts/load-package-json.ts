@@ -1,4 +1,5 @@
 import { readFileSync } from "fs";
+
 import { z } from "zod";
 
 const packageJsonSchema = z.object({

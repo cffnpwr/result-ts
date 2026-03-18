@@ -63,6 +63,14 @@
               deno
             ];
           };
+
+          # Publish shell
+          devShells.publish = pkgs.mkShell {
+            packages = with pkgs; [
+              bun
+              nodePackages.pnpm
+            ];
+          };
         };
     };
 }

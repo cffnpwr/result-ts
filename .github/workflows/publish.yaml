@@ -1,26 +1,48 @@
 name: Publish
 on:
-  push:
-    branches:
-      - release
-
+  release:
+    types:
+      - published
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+permissions: {}
 jobs:
-  publish:
-    runs-on: ubuntu-latest
+  publish-npm:
+    name: Publish to npm
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: read
       id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          deno-version: "2.x"
-
-      - name: Install Packages
-        run: deno install
-
-      - name: Publish package
-        run: deno publish
+          persist-credentials: false
+      - name: Install Nix
+        uses: DeterminateSystems/determinate-nix-action@131015bad844610e5e6300f8a143bf625d3e74f4 # v3.17.0
+      - name: Install dependencies
+        run: nix develop .#publish --command bun install --frozen-lockfile
+      - name: Build
+        run: nix develop .#publish --command bun run build
+      - name: Publish to npm
+        run: nix develop .#publish --command bunx pnpm publish --provenance --access public --no-git-checks
+  publish-jsr:
+    name: Publish to JSR
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Install Nix
+        uses: DeterminateSystems/determinate-nix-action@131015bad844610e5e6300f8a143bf625d3e74f4 # v3.17.0
+      - name: Install dependencies
+        run: nix develop .#publish --command bun install --frozen-lockfile
+      - name: Publish to JSR
+        run: nix develop .#publish --command bun run publish:jsr
