@@ -1,6 +1,6 @@
 {
   "name": "@cffnpwr/result-ts",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "private": false,
   "description": "Rust like Result type for TypeScript",
   "homepage": "https://github.com/cffnpwr/result-ts",
