@@ -224,4 +224,38 @@ describe("result.ts", () => {
       expect(exErr.orElse(() => expected)).toEqual(expected);
     });
   });
+
+  describe("Type narrowing", () => {
+    it("[positive] `isOk()` should narrow `Result<T, E>` to `Result.Ok<T, E>`", () => {
+      const res: Result<number, string> = Ok(1);
+      if (res.isOk()) {
+        expectTypeOf(res).toEqualTypeOf<Result.Ok<number, string>>();
+      }
+    });
+
+    it("[positive] `isErr()` should narrow `Result<T, E>` to `Result.Err<T, E>`", () => {
+      const res: Result<number, string> = Err("error");
+      if (res.isErr()) {
+        expectTypeOf(res).toEqualTypeOf<Result.Err<number, string>>();
+      }
+    });
+
+    it("[positive] `isOk()` should narrow the else branch to `Result.Err<T, E>`", () => {
+      const res: Result<number, string> = Err("error");
+      if (res.isOk()) {
+        // unreachable
+      } else {
+        expectTypeOf(res).toEqualTypeOf<Result.Err<number, string>>();
+      }
+    });
+
+    it("[positive] `isErr()` should narrow the else branch to `Result.Ok<T, E>`", () => {
+      const res: Result<number, string> = Ok(1);
+      if (res.isErr()) {
+        // unreachable
+      } else {
+        expectTypeOf(res).toEqualTypeOf<Result.Ok<number, string>>();
+      }
+    });
+  });
 });

@@ -175,4 +175,38 @@ describe("option.ts", () => {
       expect(exNone.orElse(() => Some(2))).toEqual(expected);
     });
   });
+
+  describe("Type narrowing", () => {
+    it("[positive] `isSome()` should narrow `Option<T>` to `Option.Some<T>`", () => {
+      const opt: Option<number> = Some(1);
+      if (opt.isSome()) {
+        expectTypeOf(opt).toEqualTypeOf<Option.Some<number>>();
+      }
+    });
+
+    it("[positive] `isNone()` should narrow `Option<T>` to `Option.None<T>`", () => {
+      const opt: Option<number> = None();
+      if (opt.isNone()) {
+        expectTypeOf(opt).toEqualTypeOf<Option.None<number>>();
+      }
+    });
+
+    it("[positive] `isSome()` should narrow the else branch to `Option.None<T>`", () => {
+      const opt: Option<number> = None();
+      if (opt.isSome()) {
+        // unreachable
+      } else {
+        expectTypeOf(opt).toEqualTypeOf<Option.None<number>>();
+      }
+    });
+
+    it("[positive] `isNone()` should narrow the else branch to `Option.Some<T>`", () => {
+      const opt: Option<number> = Some(1);
+      if (opt.isNone()) {
+        // unreachable
+      } else {
+        expectTypeOf(opt).toEqualTypeOf<Option.Some<number>>();
+      }
+    });
+  });
 });
