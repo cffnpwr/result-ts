@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, expectTypeOf, it } from "bun:test";
 
 import type { Option } from "./option.ts";
 
@@ -10,104 +10,104 @@ describe("option.ts", () => {
   const exSome: Option<number> = Some(1);
   const exNone: Option<number> = None();
 
-  describe("等価性", () => {
-    it("[正常系] 同一の値を持つSomeは等価である", () => {
+  describe("Equality test", () => {
+    it("[positive] `Option.Some` with the same value should be equal", () => {
       const some1 = Some(1);
       const some2 = Some(1);
 
       expect(some1).toEqual(some2);
     });
 
-    it("[正常系] 異なる値を持つSomeは等価でない", () => {
+    it("[positive] `Option.Some` with different values should not be equal", () => {
       const some1 = Some(1);
       const some2 = Some(2);
 
       expect(some1).not.toEqual(some2);
     });
 
-    it("[正常系] SomeとNoneは等価でない", () => {
+    it("[positive] `Option.Some` and `Option.None` should not be equal", () => {
       const some = Some(1);
-      const none = None();
+      const none: Option<number> = None();
 
       expect(some).not.toEqual(none);
     });
 
-    it("[正常系] 同一の値を持つNoneは等価である", () => {
-      const none1 = None();
-      const none2 = None();
+    it("[positive] `Option.None` should be equal", () => {
+      const none1: Option<number> = None();
+      const none2: Option<number> = None();
 
       expect(none1).toEqual(none2);
     });
   });
 
   describe("isSome()", () => {
-    it("[正常系] SomeでisSome()を実行するとtrueが返る", () => {
+    it("[positive] `isSome()` on `Option.Some` should return true", () => {
       expect(exSome.isSome()).toBe(true);
     });
 
-    it("[正常系] NoneでisSome()を実行するとfalseが返る", () => {
+    it("[positive] `isSome()` on `Option.None` should return false", () => {
       expect(exNone.isSome()).toBe(false);
     });
   });
 
   describe("isNone()", () => {
-    it("[正常系] SomeでisNone()を実行するとfalseが返る", () => {
+    it("[positive] `isNone()` on `Option.Some` should return false", () => {
       expect(exSome.isNone()).toBe(false);
     });
 
-    it("[正常系] NoneでisNone()を実行するとtrueが返る", () => {
+    it("[positive] `isNone()` on `Option.None` should return true", () => {
       expect(exNone.isNone()).toBe(true);
     });
   });
 
   describe("unwrap()", () => {
-    it("[正常系] Someでunwrap()を実行すると値が返る", () => {
+    it("[positive] `unwrap()` on `Option.Some` should return the value", () => {
       expect(exSome.unwrap()).toBe(1);
     });
 
-    it("[異常系] Noneでunwrap()を実行するとUnwrapErrorを吐く", () => {
+    it("[negative] `unwrap()` on `Option.None` should throw `UnwrapError`", () => {
       expect(() => exNone.unwrap()).toThrow(UnwrapError);
     });
   });
 
   describe("unwrapOr()", () => {
-    it("[正常系] SomeでunwrapOr()を実行すると自身の値を返す", () => {
+    it("[positive] `unwrapOr()` on `Option.Some` should return its own value", () => {
       expect(exSome.unwrapOr(2)).toBe(1);
     });
 
-    it("[正常系] NoneでunwrapOr()を実行すると引数の値を返す", () => {
+    it("[positive] `unwrapOr()` on `Option.None` should return the fallback value", () => {
       expect(exNone.unwrapOr(2)).toBe(2);
     });
   });
 
   describe("unwrapOrElse()", () => {
-    it("[正常系] SomeでunwrapOrElse()を実行すると自身の値を返す", () => {
+    it("[positive] `unwrapOrElse()` on `Option.Some` should return its own value", () => {
       expect(exSome.unwrapOrElse(() => 2)).toBe(1);
     });
 
-    it("[正常系] NoneでunwrapOrElse()を実行すると関数の戻り値を返す", () => {
+    it("[positive] `unwrapOrElse()` on `Option.None` should return the result of the function", () => {
       expect(exNone.unwrapOrElse(() => 2)).toBe(2);
     });
   });
 
   describe("expect()", () => {
-    it("[正常系] Someでexpect()を実行すると値が返る", () => {
+    it("[positive] `expect()` on `Option.Some` should return the value", () => {
       expect(exSome.expect("error")).toBe(1);
     });
 
-    it("[異常系] Noneでexpect()を実行するとUnwrapErrorを吐く", () => {
+    it("[negative] `expect()` on `Option.None` should throw `UnwrapError`", () => {
       expect(() => exNone.expect("error")).toThrow(new UnwrapError("error"));
     });
   });
 
   describe("map()", () => {
-    it("[正常系] Someでmap()を実行すると引数の関数を実行した結果のSomeが返る", () => {
+    it("[positive] `map()` on `Option.Some` should return `Option.Some` with the result of the function", () => {
       const expected: Option<string> = Some("1");
 
       expect(exSome.map((val) => val.toString())).toEqual(expected);
     });
 
-    it("[正常系] Noneでmap()を実行すると自身の値を返す", () => {
+    it("[positive] `map()` on `Option.None` should return `Option.None`", () => {
       const expected: Option<string> = None();
 
       expect(exNone.map((val) => val.toString())).toEqual(expected);
@@ -115,47 +115,47 @@ describe("option.ts", () => {
   });
 
   describe("okOr()", () => {
-    it("[正常系] SomeでokOr()を実行すると自身の値をOkで包んで返す", () => {
+    it("[positive] `okOr()` on `Option.Some` should return the value wrapped in `Result.Ok`", () => {
       expect(exSome.okOr(2)).toEqual(Ok(1));
     });
 
-    it("[正常系] NoneでokOr()を実行すると引数の値をErrで包んで返す", () => {
+    it("[positive] `okOr()` on `Option.None` should return the fallback value wrapped in `Result.Err`", () => {
       expect(exNone.okOr(2)).toEqual(Err(2));
     });
   });
 
   describe("and()", () => {
-    it("[正常系] Someでand()を実行すると引数の値を返す", () => {
+    it("[positive] `and()` on `Option.Some` should return the argument value", () => {
       const expected: Option<string> = Some("1");
 
       expect(exSome.and(Some("1"))).toEqual(expected);
     });
 
-    it("[正常系] Noneでand()を実行するとNoneを返す", () => {
+    it("[positive] `and()` on `Option.None` should return `Option.None`", () => {
       expect(exNone.and(Some(1))).toEqual(None());
     });
   });
 
   describe("andThen()", () => {
-    it("[正常系] SomeでandThen()を実行すると引数の関数を実行した結果を返す", () => {
+    it("[positive] `andThen()` on `Option.Some` should return the result of the function", () => {
       const expected: Option<string> = Some("1");
 
       expect(exSome.andThen((val) => Some(val.toString()))).toEqual(expected);
     });
 
-    it("[正常系] NoneでandThen()を実行するとNoneを返す", () => {
+    it("[positive] `andThen()` on `Option.None` should return `Option.None`", () => {
       expect(exNone.andThen((val) => Some(val.toString()))).toEqual(None());
     });
   });
 
   describe("or()", () => {
-    it("[正常系] Someでor()を実行すると自身の値を返す", () => {
+    it("[positive] `or()` on `Option.Some` should return its own value", () => {
       const expected: Option<number> = Some(1);
 
       expect(exSome.or(Some(2))).toEqual(expected);
     });
 
-    it("[正常系] Noneでor()を実行すると引数の値を返す", () => {
+    it("[positive] `or()` on `Option.None` should return the argument value", () => {
       const expected: Option<number> = Some(2);
 
       expect(exNone.or(Some(2))).toEqual(expected);
@@ -163,16 +163,50 @@ describe("option.ts", () => {
   });
 
   describe("orElse()", () => {
-    it("[正常系] SomeでorElse()を実行すると自身の値を返す", () => {
+    it("[positive] `orElse()` on `Option.Some` should return its own value", () => {
       const expected: Option<number> = Some(1);
 
       expect(exSome.orElse(() => Some(2))).toEqual(expected);
     });
 
-    it("[正常系] NoneでorElse()を実行すると関数の戻り値を返す", () => {
+    it("[positive] `orElse()` on `Option.None` should return the result of the function", () => {
       const expected: Option<number> = Some(2);
 
       expect(exNone.orElse(() => Some(2))).toEqual(expected);
+    });
+  });
+
+  describe("Type narrowing", () => {
+    it("[positive] `isSome()` should narrow `Option<T>` to `Option.Some<T>`", () => {
+      const opt: Option<number> = Some(1);
+      if (opt.isSome()) {
+        expectTypeOf(opt).toEqualTypeOf<Option.Some<number>>();
+      }
+    });
+
+    it("[positive] `isNone()` should narrow `Option<T>` to `Option.None<T>`", () => {
+      const opt: Option<number> = None();
+      if (opt.isNone()) {
+        expectTypeOf(opt).toEqualTypeOf<Option.None<number>>();
+      }
+    });
+
+    it("[positive] `isSome()` should narrow the else branch to `Option.None<T>`", () => {
+      const opt: Option<number> = None();
+      if (opt.isSome()) {
+        // unreachable
+      } else {
+        expectTypeOf(opt).toEqualTypeOf<Option.None<number>>();
+      }
+    });
+
+    it("[positive] `isNone()` should narrow the else branch to `Option.Some<T>`", () => {
+      const opt: Option<number> = Some(1);
+      if (opt.isNone()) {
+        // unreachable
+      } else {
+        expectTypeOf(opt).toEqualTypeOf<Option.Some<number>>();
+      }
     });
   });
 });

@@ -6,6 +6,11 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - "**/*.ts"
+      - "**/package.json"
+      - "**/bun.lock"
+      - "**/tsconfig.json"
 concurrency:
   group: ${{ github.workflow_ref }}-${{ github.event.number || github.sha }}
   cancel-in-progress: true

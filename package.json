@@ -24,6 +24,8 @@
     "build": "tsdown",
     "build-package": "bun scripts/build-package.ts",
     "test": "bun test src",
+    "test:coverage": "bun test src --coverage",
+    "typecheck": "tsc -p tsconfig.typecheck.json --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "runtime-test": "bun scripts/runtime-test.ts",
