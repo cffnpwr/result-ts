@@ -8,10 +8,13 @@ on:
       - synchronize
       - reopened
       - edited
+
 concurrency:
   group: ${{ github.workflow_ref }}-${{ github.event.number }}
   cancel-in-progress: true
+
 permissions: {}
+
 jobs:
   status-check:
     uses: cffnpwr/actions/.github/workflows/status-check.yaml@d09e1234a71be2ff954d851d1ead90a60e17bcfb

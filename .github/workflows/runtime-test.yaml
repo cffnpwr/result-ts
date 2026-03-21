@@ -9,10 +9,13 @@ on:
       - "**/bun.lock"
       - "**/tsconfig.json"
   workflow_call:
+
 concurrency:
   group: ${{ github.workflow_ref }}-${{ github.event.number }}
   cancel-in-progress: true
+
 permissions: {}
+
 jobs:
   runtime_test:
     name: Runtime Test
@@ -23,15 +26,21 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@131015bad844610e5e6300f8a143bf625d3e74f4 # v3.17.0
+
       - name: Install dependencies
         run: nix develop .#runtime-test --command bun install --frozen-lockfile
+
       - name: Build package
         run: nix develop .#runtime-test --command bun run build-package
+
       - name: Runtime Test (node)
         run: nix develop .#runtime-test --command bun run runtime-test node
+
       - name: Runtime Test (bun)
         run: nix develop .#runtime-test --command bun run runtime-test bun
+
       - name: Runtime Test (deno)
         run: nix develop .#runtime-test --command bun run runtime-test deno

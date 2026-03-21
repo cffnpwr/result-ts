@@ -8,10 +8,13 @@ on:
       - main
     paths:
       - ".github/workflows/*"
+
 concurrency:
   group: ${{ github.workflow_ref }}-${{ github.event.number || github.sha }}
   cancel-in-progress: true
+
 permissions: {}
+
 jobs:
   lint:
     uses: cffnpwr/actions/.github/workflows/github-actions-lint.yaml@d09e1234a71be2ff954d851d1ead90a60e17bcfb
