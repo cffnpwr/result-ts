@@ -131,7 +131,7 @@ async function buildRuntimeTest(runtime: Runtime): Promise<void> {
       case "node":
       case "bun": {
         f.addImportDeclaration({
-          namedImports: ["describe", "it", "expect"],
+          namedImports: ["describe", "it", "expectTypeOf", "expect"],
           moduleSpecifier: "vitest",
         });
         break;
@@ -145,6 +145,10 @@ async function buildRuntimeTest(runtime: Runtime): Promise<void> {
           {
             namedImports: ["expect"],
             moduleSpecifier: "@std/expect",
+          },
+          {
+            namedImports: ["expectTypeOf"],
+            moduleSpecifier: "expect-type",
           },
         ]);
         break;
