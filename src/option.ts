@@ -86,7 +86,7 @@ export namespace Option {
   export type Some<T> = _Some<T>;
   export type None<T> = _None<T>;
 
-  export class _Some<T> implements OptionBase<T> {
+  class _Some<T> implements OptionBase<T> {
     constructor(readonly value: T) {}
 
     isSome(): this is Some<T> {
@@ -138,7 +138,9 @@ export namespace Option {
     }
   }
 
-  export class _None<T = never> implements OptionBase<T> {
+  class _None<T> implements OptionBase<T> {
+    declare readonly _none: true;
+
     isSome(): this is Some<T> {
       return false;
     }
@@ -189,7 +191,7 @@ export namespace Option {
   }
 
   export const Some = <T>(value: T): Some<T> => new _Some(value);
-  export const None = <T = never>(): None<T> => new _None();
+  export const None = <T>(): None<T> => new _None<T>();
 }
 export type Option<T> = Option.Some<T> | Option.None<T>;
 export const Some = Option.Some;
