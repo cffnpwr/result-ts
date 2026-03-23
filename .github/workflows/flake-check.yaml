@@ -15,6 +15,6 @@ concurrency:
 permissions: {}
 jobs:
   flake-check:
-    uses: cffnpwr/actions/.github/workflows/flake-check.yaml@b1083d19961177850fd5c4f85c779b8a8400a236
+    uses: cffnpwr/actions/.github/workflows/flake-check.yaml@827d6803313793c29f98826d5d9c00e92da976cb
     permissions:
       contents: read
