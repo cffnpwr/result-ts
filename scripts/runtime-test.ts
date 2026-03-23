@@ -40,47 +40,7 @@ const testConfig: {
   },
 };
 
-const args = process.argv.slice(2);
-const helpFlag = args.includes("-h") || args.includes("--help");
-const positional = args.filter((a) => !a.startsWith("-"));
-
-if (helpFlag) {
-  stdout(`
-Usage: runtime-test [options] <runtime>
-
-Options:
-  -h, --help  Display this help message
-
-Arguments:
-  runtime     Specify the runtime to test (node, deno, bun)
-  `);
-  process.exit(0);
-}
-
-const _runtime = runtimeSchema.safeParse(positional[0]);
-if (!_runtime.success) {
-  const e = _runtime.error.format()._errors.join("\n");
-  stderr(`Invalid runtime: ${e}`);
-  process.exit(1);
-}
-const runtime = _runtime.data;
-
-stdout(`Start runtime test for ${runtime}...`);
-printSeparator();
-
-stdout(`Building runtime test for ${runtime}...`);
-await buildRuntimeTest(runtime);
-stdout(`Built runtime test for ${runtime}.`);
-printSeparator();
-
-stdout(`Running runtime test for ${runtime}...`);
-runRuntimeTest(runtime);
-stdout(`Ran runtime test for ${runtime}.`);
-printSeparator();
-
-stdout(`Finish runtime test for ${runtime}.`);
-
-async function buildRuntimeTest(runtime: Runtime): Promise<void> {
+const buildRuntimeTest = async (runtime: Runtime): Promise<void> => {
   const rootDir = resolve(import.meta.dir, "..");
   const packageJson = loadPackageJson(resolve(rootDir, "./package.json"));
   const outDir = resolve(rootDir, `./runtime-test/${runtime}`);
@@ -182,9 +142,9 @@ async function buildRuntimeTest(runtime: Runtime): Promise<void> {
       .replaceAll(/\${bun-only:(.*?)}/gs, runtime === "bun" ? "$1" : "");
     writeFileSync(dest, data);
   }
-}
+};
 
-function runRuntimeTest(runtime: Runtime): void {
+const runRuntimeTest = (runtime: Runtime): void => {
   const testDir = resolve(import.meta.dir, `../runtime-test/${runtime}`);
   const { exec, install, test } = testConfig[runtime];
 
@@ -197,4 +157,48 @@ function runRuntimeTest(runtime: Runtime): void {
   runCmd(exec, test, testDir);
   stdout("Ran tests.");
   printSeparator();
-}
+};
+
+const main = async (): Promise<void> => {
+  const args = process.argv.slice(2);
+  const helpFlag = args.includes("-h") || args.includes("--help");
+  const positional = args.filter((a) => !a.startsWith("-"));
+
+  if (helpFlag) {
+    stdout(`
+  Usage: runtime-test [options] <runtime>
+
+  Options:
+    -h, --help  Display this help message
+
+  Arguments:
+    runtime     Specify the runtime to test (node, deno, bun)
+    `);
+    process.exit(0);
+  }
+
+  const _runtime = runtimeSchema.safeParse(positional[0]);
+  if (!_runtime.success) {
+    const e = _runtime.error.format()._errors.join("\n");
+    stderr(`Invalid runtime: ${e}`);
+    process.exit(1);
+  }
+  const runtime = _runtime.data;
+
+  stdout(`Start runtime test for ${runtime}...`);
+  printSeparator();
+
+  stdout(`Building runtime test for ${runtime}...`);
+  await buildRuntimeTest(runtime);
+  stdout(`Built runtime test for ${runtime}.`);
+  printSeparator();
+
+  stdout(`Running runtime test for ${runtime}...`);
+  runRuntimeTest(runtime);
+  stdout(`Ran runtime test for ${runtime}.`);
+  printSeparator();
+
+  stdout(`Finish runtime test for ${runtime}.`);
+};
+
+await main();
