@@ -6,6 +6,6 @@
   },
   "devDependencies": {
     "@cffnpwr/result-ts": "${node-only:link:}../../dist",
-    "vitest": "4.1.0"
+    "vitest": "4.1.1"
   }
 }
