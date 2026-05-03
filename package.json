@@ -42,7 +42,7 @@
     "ts-morph": "27.0.2",
     "tsdown": "0.21.10",
     "typescript": "5.9.3",
-    "zod": "4.3.6"
+    "zod": "4.4.1"
   },
   "publishConfig": {
     "exports": {
