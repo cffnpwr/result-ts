@@ -83,12 +83,7 @@ runtime-test/
 
 ## Development Environment
 
-This project uses Nix flakes for reproducible development environments.
-Enter the dev shell with `nix develop` (or automatically via `direnv`).
+Development tools are managed by [mise](https://mise.jdx.dev/) via `mise.toml`.
+Run `mise install` to install them (bun, node, pnpm, deno, treefmt, yamlfmt).
 
-The flake defines three shells:
-- `default` — everyday development (bun, git, linters, formatters)
-- `runtime-test` — cross-runtime testing (bun, node, pnpm, deno)
-- `publish` — publishing to npm and JSR (bun, pnpm)
-
-When a CLI tool is unavailable, use `nix-shell -p <package> --run "<cmd>"` rather than installing globally.
+Tools not listed in `mise.toml` are expected to come from the global environment.
