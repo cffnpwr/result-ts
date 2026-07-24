@@ -27,6 +27,7 @@ jobs:
         with:
           node-version: "24.18.0"
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
       - name: Install dependencies
         run: nix develop .#publish --command bun install --frozen-lockfile
       - name: Build
