@@ -2,29 +2,22 @@
 
 ## Development Environment
 
-This project uses Nix flakes. Three shells are defined in `flake.nix`:
+Development tools are managed by [mise](https://mise.jdx.dev/). Versions are pinned in `mise.toml`:
 
-| Shell | Contents | When to use |
-|---|---|---|
-| `default` | bun, git, nil, nixd, nixfmt, treefmt, yamlfmt | Everyday development |
-| `runtime-test` | bun, node, pnpm, deno | Cross-runtime testing |
-| `publish` | bun, pnpm | Publishing to npm and JSR |
+| Tool | Used for |
+|---|---|
+| `bun` | Package management, unit tests, build, scripts |
+| `node`, `pnpm` | Node.js runtime test, npm publishing |
+| `deno` | Deno runtime test |
+| `treefmt`, `yamlfmt` | Formatting |
 
-Enter a shell:
-
-```bash
-nix develop          # default shell
-nix develop .#runtime-test
-nix develop .#publish
-```
-
-With `direnv` configured (`.envrc` present), the default shell activates automatically on `cd`.
-
-If a tool is not available outside Nix, run it via:
+Install them with:
 
 ```bash
-nix-shell -p <package> --run "<cmd>"
+mise install
 ```
+
+`mise` activation in the shell puts these tools on `PATH`; otherwise prefix commands with `mise exec --`.
 
 ## npm Scripts
 
@@ -78,7 +71,7 @@ bun run runtime-test bun    # Bun via bun + vitest
 bun run runtime-test deno   # Deno via deno + @std/testing
 ```
 
-Requires the `runtime-test` Nix shell (or all three runtimes available globally).
+Requires node, pnpm and deno, which `mise.toml` provides.
 
 Generated test projects are written to `runtime-test/{node,bun,deno}/` (gitignored).
 
@@ -93,22 +86,21 @@ Publishes the package to JSR (`jsr.io`). Requires authentication and should only
 | `unit-test.yaml` | PR → main | `bun test --coverage`, posts coverage with octocov |
 | `runtime-test.yaml` | PR → main (TS/JSON changes) | Runs runtime tests for all three runtimes |
 | `eslint.yaml` | push main, PR → main | ESLint check |
-| `treefmt.yaml` | push main, PR → main | treefmt format check (Nix, YAML) |
-| `flake-check.yaml` | push main, PR → main (*.nix changes) | `nix flake check` |
+| `treefmt.yaml` | push main, PR → main | treefmt format check (YAML) |
 | `github-actions-lint.yaml` | push main, PR → main (workflows changes) | Lints workflow YAML files |
 | `semantic-pr-title.yaml` | PR opened/edited | Validates Conventional Commits title format |
 | `status-check.yaml` | PR → main | Aggregates all required checks |
 | `release-please.yaml` | push → main | Creates/updates release PR via release-please |
 | `publish.yaml` | release published | Publishes to npm and JSR |
 
-All workflows use Nix (`DeterminateSystems/determinate-nix-action`) for environment setup and pin all action versions to commit SHAs.
+All workflows use mise (`jdx/mise-action`) for environment setup and pin all action versions to commit SHAs.
 
 ## Formatting
 
-TypeScript/JavaScript is formatted by Deno formatter (configured in VSCode via `.vscode/settings.json`). Nix and YAML files are formatted by `treefmt`:
+TypeScript/JavaScript is formatted by Deno formatter (configured in VSCode via `.vscode/settings.json`). YAML files are formatted by `treefmt`:
 
 ```bash
-nix fmt            # run treefmt (Nix shell required)
+treefmt
 ```
 
-The `treefmt.yaml` CI job checks that all Nix/YAML files are correctly formatted.
+The `treefmt.yaml` CI job checks that all YAML files are correctly formatted.

@@ -9,7 +9,7 @@ TypeScript implementation of Rust-like Result and Option types. Published to JSR
 - Bun + pnpm for package management (`bun.lock`, `package.json`)
 - ESLint (`eslint.config.ts`)
 - tsdown for bundling (`tsdown.config.ts`)
-- Nix + flakes (`flake.nix`)
+- mise for dev tool management (`mise.toml`)
 - treefmt for formatting (`treefmt.toml`)
 - GitHub Actions for CI (`.github/`)
 

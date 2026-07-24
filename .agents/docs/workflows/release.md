@@ -43,9 +43,9 @@ When a GitHub Release is published, two jobs run in parallel:
 ### `publish-npm`
 
 1. Checks out the repo.
-2. Installs dependencies: `nix develop .#publish --command bun install --frozen-lockfile`
-3. Builds: `nix develop .#publish --command bun run build`
-4. Publishes: `bunx pnpm publish --provenance --access public --no-git-checks`
+2. Installs dependencies: `bun install --frozen-lockfile`
+3. Builds: `bun run build`
+4. Publishes: `pnpm publish --provenance --access public --no-git-checks`
 
 The build step runs `tsdown` (produces `dist/`) followed by `build-package` (generates `dist/package.json` with corrected export paths).
 
@@ -68,10 +68,10 @@ These are already configured. Do not modify or rotate them without coordinating 
 
 ## Manual Release (Emergency Only)
 
-If the automated flow fails, you can publish manually from the `publish` Nix shell:
+If the automated flow fails, you can publish manually:
 
 ```bash
-nix develop .#publish
+mise install
 
 # Build
 bun install --frozen-lockfile
@@ -79,7 +79,7 @@ bun run build
 bun run build-package
 
 # Publish to npm
-bunx pnpm publish --provenance --access public --no-git-checks
+pnpm publish --provenance --access public --no-git-checks
 
 # Publish to JSR
 bun run publish:jsr
