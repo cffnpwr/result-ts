@@ -48,10 +48,12 @@ When `releases_created` is `true`, two jobs run in parallel. Both check out the 
 
 1. Checks out the release commit.
 2. Installs dependencies: `bun install --frozen-lockfile`
-3. Builds: `bun run build`
-4. Publishes: `pnpm publish --provenance --access public --no-git-checks`
+3. Builds: `bun run build` (runs `tsdown`, produces `dist/`)
+4. Applies `publishConfig.exports` to the manifest with `jq` and drops `publishConfig`
+5. Packs the tarball: `bun pm pack`
+6. Publishes: `npm publish "$TARBALL" --access public --provenance`
 
-The build step runs `tsdown` (produces `dist/`) followed by `build-package` (generates `dist/package.json` with corrected export paths).
+npm has no equivalent of pnpm's `publishConfig` field replacement, so step 4 rewrites `exports` explicitly before packing.
 
 ### `publish-jsr`
 
@@ -86,10 +88,12 @@ mise install
 # Build
 bun install --frozen-lockfile
 bun run build
-bun run build-package
 
 # Publish to npm
-pnpm publish --provenance --access public --no-git-checks
+jq '.exports = .publishConfig.exports | del(.publishConfig)' package.json > package.json.tmp
+mv package.json.tmp package.json
+npm publish "$(bun pm pack --quiet | tail -n1)" --access public --provenance
+jj restore package.json   # revert the manifest rewrite
 
 # Publish to JSR
 bun run publish:jsr

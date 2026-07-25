@@ -7,7 +7,8 @@ Development tools are managed by [mise](https://mise.jdx.dev/). Versions are pin
 | Tool | Used for |
 |---|---|
 | `bun` | Package management, unit tests, build, scripts |
-| `node`, `pnpm` | Node.js runtime test, npm publishing |
+| `node` | Node.js runtime test, npm publishing (`npm` ships with it) |
+| `pnpm` | Node.js runtime test |
 | `deno` | Deno runtime test |
 | `treefmt`, `yamlfmt` | Formatting |
 
@@ -46,10 +47,10 @@ Bundles the library using `tsdown` (configured in `tsdown.config.ts`). Outputs:
 
 ### `bun run build-package`
 
-Runs after `build`. Generates `dist/package.json` by rewriting `publishConfig.exports` paths from the root `package.json`. This is required before publishing to npm.
+Runs `build`, then generates `dist/package.json` by rewriting `publishConfig.exports` paths from the root `package.json`. Used by `runtime-test.yaml`; the npm publish flow does not run it.
 
 ```bash
-bun run build && bun run build-package
+bun run build-package
 ```
 
 ### `bun run lint`

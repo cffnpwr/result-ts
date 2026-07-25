@@ -72,8 +72,19 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: Apply publishConfig to manifest
+        run: |
+          jq '.exports = .publishConfig.exports | del(.publishConfig)' package.json > package.json.tmp
+          mv package.json.tmp package.json
+
+      - name: Pack
+        id: pack
+        run: echo "tarball=$(bun pm pack --quiet | tail -n1)" >> "$GITHUB_OUTPUT"
+
       - name: Publish to npm
-        run: pnpm publish --provenance --access public --no-git-checks
+        env:
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+        run: npm publish "$TARBALL" --access public --provenance
 
   publish-jsr:
     name: Publish to JSR
