@@ -90,8 +90,7 @@ Publishes the package to JSR (`jsr.io`). Requires authentication and should only
 | `github-actions-lint.yaml` | push main, PR → main (workflows changes) | Lints workflow YAML files |
 | `semantic-pr-title.yaml` | PR opened/edited | Validates Conventional Commits title format |
 | `status-check.yaml` | PR → main | Aggregates all required checks |
-| `release-please.yaml` | push → main | Creates/updates release PR via release-please |
-| `publish.yaml` | release published | Publishes to npm and JSR |
+| `release-please.yaml` | push → main | Creates/updates release PR, publishes to npm and JSR, then publishes the draft GitHub Release |
 
 All workflows use mise (`jdx/mise-action`) for environment setup and pin all action versions to commit SHAs.
 

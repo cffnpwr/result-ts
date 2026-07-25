@@ -3,16 +3,23 @@ on:
   push:
     branches:
       - main
+
 concurrency:
   group: >-
     ${{ github.workflow }}- ${{ github.repository }}- ${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
+  cancel-in-progress: false
+
 permissions: {}
+
 jobs:
   release-please:
     name: Release Please
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      sha: ${{ steps.release.outputs.sha }}
     steps:
       - name: Create GitHub App Token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -24,10 +31,98 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
           permission-issues: write
+
       - name: Release Please
+        id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           token: ${{ steps.app-token.outputs.token }}
           target-branch: ${{ github.ref_name }}
           config-file: .github/release-please/config.json
           manifest-file: .github/release-please/manifest.json
+
+  publish-npm:
+    name: Publish to npm
+    needs: release-please
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release-please.outputs.sha }}
+          persist-credentials: false
+
+      - name: Setup mise
+        uses: jdx/mise-action@9e7f7633ff6f6d6048a9418a68d48f288f50eb14 # v4.2.3
+
+      - name: Setup npm registry auth
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
+
+      - name: Publish to npm
+        run: pnpm publish --provenance --access public --no-git-checks
+
+  publish-jsr:
+    name: Publish to JSR
+    needs: release-please
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release-please.outputs.sha }}
+          persist-credentials: false
+
+      - name: Setup mise
+        uses: jdx/mise-action@9e7f7633ff6f6d6048a9418a68d48f288f50eb14 # v4.2.3
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Publish to JSR
+        run: bun run publish:jsr
+
+  # npm・JSRへのpublishが全て成功してからGitHub Releaseを下書きから公開する
+  publish-release:
+    name: Publish GitHub release
+    needs:
+      - release-please
+      - publish-npm
+      - publish-jsr
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions: {}
+    steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Publish draft release
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+        run: gh release edit "$TAG" --draft=false

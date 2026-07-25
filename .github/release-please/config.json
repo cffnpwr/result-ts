@@ -4,6 +4,7 @@
   "pull-request-title-pattern": "chore(release): bump to v${version}",
   "include-component-in-tag": false,
   "include-v-in-tag": true,
+  "draft": true,
   "packages": {
     ".": {
       "extra-files": [

@@ -11,10 +11,14 @@ Releases are fully automated via release-please and GitHub Actions. Manual steps
         ↓
 3. Merge the Release PR
         ↓
-4. GitHub creates a release tag automatically
+4. release-please creates the tag and a draft GitHub Release
         ↓
-5. publish.yaml triggers and publishes to npm + JSR
+5. publish-npm and publish-jsr run in parallel
+        ↓
+6. Once both succeed, the draft GitHub Release is published
 ```
+
+Everything after step 1 happens inside `release-please.yaml`. The GitHub Release stays a draft until both registries have accepted the package, so a public release always implies npm and JSR are live.
 
 ## How release-please Works
 
@@ -24,7 +28,7 @@ The `release-please.yaml` workflow runs on every push to `main`. It reads commit
 - Generates / updates `CHANGELOG.md`.
 - Creates or updates a Release PR titled `chore(release): bump to v{version}`.
 
-When the Release PR is merged, release-please creates a GitHub Release with tag `v{version}`.
+When the Release PR is merged, release-please creates tag `v{version}` and a **draft** GitHub Release (`"draft": true` in the config).
 
 ### Version Bumping Rules
 
@@ -36,13 +40,13 @@ When the Release PR is merged, release-please creates a GitHub Release with tag 
 
 Configuration lives in `.github/release-please/config.json` and `.github/release-please/manifest.json`.
 
-## publish.yaml: What It Does
+## Publish Jobs
 
-When a GitHub Release is published, two jobs run in parallel:
+When `releases_created` is `true`, two jobs run in parallel. Both check out the release commit (`sha` output of release-please).
 
 ### `publish-npm`
 
-1. Checks out the repo.
+1. Checks out the release commit.
 2. Installs dependencies: `bun install --frozen-lockfile`
 3. Builds: `bun run build`
 4. Publishes: `pnpm publish --provenance --access public --no-git-checks`
@@ -51,17 +55,23 @@ The build step runs `tsdown` (produces `dist/`) followed by `build-package` (gen
 
 ### `publish-jsr`
 
-1. Checks out the repo.
+1. Checks out the release commit.
 2. Installs dependencies (same as above).
 3. Publishes: `bun run publish:jsr` (runs `jsr publish`).
 
 Both jobs use OIDC (`id-token: write`) for provenance — no npm token or JSR token is stored as a secret.
 
+### `publish-release`
+
+Runs only after both publish jobs succeed. Flips the draft release to public with `gh release edit "$TAG" --draft=false`, using the same GitHub App token (`contents: write`) that created the release.
+
+If either registry fails, this job is skipped and the release stays a draft. Fix the cause and re-run the failed jobs; the draft is published once they pass.
+
 ## Required GitHub Secrets
 
 | Secret | Used by |
 |---|---|
-| `RELEASE_APP_ID` | `release-please.yaml` — GitHub App for creating the release PR |
+| `RELEASE_APP_ID` | `release-please.yaml` — GitHub App for creating the release PR and publishing the draft release |
 | `RELEASE_PRIVATE_KEY` | `release-please.yaml` — GitHub App private key |
 
 These are already configured. Do not modify or rotate them without coordinating with the repo owner.
@@ -93,5 +103,5 @@ View recent releases and their publish status:
 
 ```bash
 gh release list --repo cffnpwr/result-ts
-gh run list --workflow publish.yaml --repo cffnpwr/result-ts
+gh run list --workflow release-please.yaml --repo cffnpwr/result-ts
 ```
