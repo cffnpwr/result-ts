@@ -67,12 +67,12 @@ Runs only after both publish jobs succeed. Flips the draft release to public wit
 
 If either registry fails, this job is skipped and the release stays a draft. Fix the cause and re-run the failed jobs; the draft is published once they pass.
 
-## Required GitHub Secrets
+## Required GitHub Secrets and Variables
 
-| Secret | Used by |
-|---|---|
-| `RELEASE_APP_ID` | `release-please.yaml` — GitHub App for creating the release PR and publishing the draft release |
-| `RELEASE_PRIVATE_KEY` | `release-please.yaml` — GitHub App private key |
+| Name | Kind | Used by |
+|---|---|---|
+| `RELEASE_CLIENT_ID` | Variable | `release-please.yaml` — GitHub App client ID for creating the release PR and publishing the draft release |
+| `RELEASE_PRIVATE_KEY` | Secret | `release-please.yaml` — GitHub App private key |
 
 These are already configured. Do not modify or rotate them without coordinating with the repo owner.
 
