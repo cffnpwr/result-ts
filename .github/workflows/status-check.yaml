@@ -14,7 +14,7 @@ concurrency:
 permissions: {}
 jobs:
   status-check:
-    uses: cffnpwr/actions/.github/workflows/status-check.yaml@2d0c5be1c51b75163d06557bab9890c2e6bb43c6 # main
+    uses: cffnpwr/actions/.github/workflows/status-check.yaml@1a9954329ccd46a27e5331b8a75c00708a462275 # main
     permissions:
       contents: read
       actions: read
