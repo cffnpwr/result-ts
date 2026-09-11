@@ -1,7 +1,7 @@
 [tools]
 bun = "1.4.2"
 node = "24.21.0"
-pnpm = "11.26.0"
+pnpm = "12.4.0"
 deno = "2.9.6"
 "aqua:numtide/treefmt" = "2.6.0"
 yamlfmt = "0.21.0"
