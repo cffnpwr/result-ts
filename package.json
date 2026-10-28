@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@cffnpwr/eslint-config": "2.1.0",
-    "@types/bun": "1.4.3",
+    "@types/bun": "1.4.4",
     "@typescript-eslint/parser": "8.72.0",
     "eslint": "10.13.0",
     "eslint-config-flat-gitignore": "2.4.0",
