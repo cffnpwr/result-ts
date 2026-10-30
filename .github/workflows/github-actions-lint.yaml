@@ -14,6 +14,6 @@ concurrency:
 permissions: {}
 jobs:
   lint:
-    uses: cffnpwr/actions/.github/workflows/github-actions-lint.yaml@d3d7dd8120a873ef277e5ed6cb75fa8290d41e1c # main
+    uses: cffnpwr/actions/.github/workflows/github-actions-lint.yaml@233023979bbcded892f750a04dc3064379395153 # main
     permissions:
       contents: read
